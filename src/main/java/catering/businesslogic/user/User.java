@@ -12,7 +12,7 @@ import java.util.Set;
 public class User {
 
     public static enum Role {
-        CUOCO, CHEF, ORGANIZZATORE, SERVIZIO
+        CUOCO, CHEF, ORGANIZZATORE, SERVIZIO, PROPRIETARIO
     };
 
     private int id;
@@ -35,6 +35,22 @@ public class User {
 
     public boolean isChef() {
         return roles.contains(Role.CHEF);
+    }
+    
+    /**
+     * Verifica se l'utente è Proprietario.
+     * Usato per controllo permessi in PersonnelManager.
+     */
+    public boolean isOwner() {
+        return roles.contains(Role.PROPRIETARIO);
+    }
+    
+    /**
+     * Verifica se l'utente è Organizzatore.
+     * Nota: il Proprietario è implicitamente anche Organizzatore.
+     */
+    public boolean isOrganizer() {
+        return roles.contains(Role.ORGANIZZATORE) || roles.contains(Role.PROPRIETARIO);
     }
 
     public String getUserName() {
@@ -189,6 +205,9 @@ public class User {
                         break;
                     case 3:
                         u.roles.add(User.Role.SERVIZIO);
+                        break;
+                    case 4:
+                        u.roles.add(User.Role.PROPRIETARIO);
                         break;
                 }
             }

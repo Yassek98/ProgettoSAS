@@ -3,11 +3,13 @@ package catering.businesslogic;
 import catering.businesslogic.event.EventManager;
 import catering.businesslogic.kitchen.KitchenTaskManager;
 import catering.businesslogic.menu.MenuManager;
+import catering.businesslogic.personnel.PersonnelManager;
 import catering.businesslogic.recipe.RecipeManager;
 import catering.businesslogic.shift.ShiftManager;
 import catering.businesslogic.user.UserManager;
 import catering.persistence.KitchenTaskPersistence;
 import catering.persistence.MenuPersistence;
+import catering.persistence.PersonnelPersistence;
 
 public class CatERing {
     private static CatERing singleInstance;
@@ -25,9 +27,11 @@ public class CatERing {
     private EventManager eventMgr;
     private KitchenTaskManager kitchenTaskMgr;
     private ShiftManager shiftMgr;
+    private PersonnelManager personnelMgr;
 
     private MenuPersistence menuPersistence;
     private KitchenTaskPersistence kitchenTaskPersistence;
+    private PersonnelPersistence personnelPersistence;
 
     private CatERing() {
         menuMgr = new MenuManager();
@@ -35,13 +39,16 @@ public class CatERing {
         userMgr = new UserManager();
         eventMgr = new EventManager();
         kitchenTaskMgr = new KitchenTaskManager();
-        shiftMgr = new ShiftManager(); // Add this line to initialize ShiftManager
+        shiftMgr = new ShiftManager();
+        personnelMgr = new PersonnelManager();
 
         menuPersistence = new MenuPersistence();
         kitchenTaskPersistence = new KitchenTaskPersistence();
+        personnelPersistence = new PersonnelPersistence();
 
         menuMgr.addEventReceiver(menuPersistence);
         kitchenTaskMgr.addEventReceiver(kitchenTaskPersistence);
+        personnelMgr.addEventReceiver(personnelPersistence);
     }
 
     public static void main(String[] args) {
@@ -58,6 +65,7 @@ public class CatERing {
         System.out.println("- Event Manager: " + (app.getEventManager() != null ? "OK" : "NOT AVAILABLE"));
         System.out.println("- Kitchen Task Manager: " + (app.getKitchenTaskManager() != null ? "OK" : "NOT AVAILABLE"));
         System.out.println("- Shift Manager: " + (app.getShiftManager() != null ? "OK" : "NOT AVAILABLE"));
+        System.out.println("- Personnel Manager: " + (app.getPersonnelManager() != null ? "OK" : "NOT AVAILABLE"));
     }
 
     public KitchenTaskManager getKitchenTaskManager() {
@@ -106,6 +114,10 @@ public class CatERing {
 
     public void setKitchenTaskManager(KitchenTaskManager kitchenTaskMgr) {
         this.kitchenTaskMgr = kitchenTaskMgr;
+    }
+
+    public PersonnelManager getPersonnelManager() {
+        return personnelMgr;
     }
 
 }

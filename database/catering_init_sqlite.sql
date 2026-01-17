@@ -34,6 +34,13 @@ DROP TABLE IF EXISTS `Roles`;
 
 DROP TABLE IF EXISTS `Users`;
 
+-- ===== PERSONNEL MANAGEMENT TABLES =====
+-- (Mappano le entità del Modello di Dominio: Collaboratore, RichiestaFerie, Performance)
+DROP TABLE IF EXISTS `CollaboratorAvailability`;
+DROP TABLE IF EXISTS `PerformanceNotes`;
+DROP TABLE IF EXISTS `LeaveRequests`;
+DROP TABLE IF EXISTS `Collaborators`;
+
 -- 2) CREATE ALL TABLES (in dependency order)
 -- Start with tables that don't depend on others
 CREATE TABLE
@@ -47,6 +54,66 @@ CREATE TABLE
         `id` INTEGER NOT NULL,
         `role` TEXT NOT NULL,
         PRIMARY KEY (`id`)
+    );
+
+-- ===== PERSONNEL MANAGEMENT TABLES =====
+-- Mappa l'entità "Collaboratore" del Modello di Dominio (vedi MD_3UC-U3.drawio.png)
+-- Attributi: nome, contatto, codFisc, indirizzo, occasionale, attivo, inFerie (derivato), monteFerie
+CREATE TABLE
+    `Collaborators` (
+        `id` INTEGER PRIMARY KEY AUTOINCREMENT,
+        `name` TEXT NOT NULL,
+        `contact` TEXT NOT NULL,
+        `fiscal_code` TEXT,
+        `address` TEXT,
+        `occasional` INTEGER DEFAULT 1,      -- 1=occasionale, 0=permanente (DCD: occasionale)
+        `active` INTEGER DEFAULT 1,          -- 0=eliminato soft delete (DCD: attivo)
+        `vacation_days` INTEGER DEFAULT 0,   -- monte ferie (DCD: monteFerie)
+        `user_id` INTEGER,                   -- OPZIONALE, collegamento a Users se usa il sistema
+        FOREIGN KEY (`user_id`) REFERENCES `Users` (`id`)
+    );
+
+-- Mappa l'entità "RichiestaFerie" del Modello di Dominio
+-- Attributi: dataInizio, dataFine, approvata
+-- Relazione: "avanzata da" Collaboratore
+CREATE TABLE
+    `LeaveRequests` (
+        `id` INTEGER PRIMARY KEY AUTOINCREMENT,
+        `collaborator_id` INTEGER NOT NULL,
+        `start_date` TEXT NOT NULL,          -- formato YYYY-MM-DD (DCD: dataInizio)
+        `end_date` TEXT NOT NULL,            -- formato YYYY-MM-DD (DCD: dataFine)
+        `approved` INTEGER DEFAULT 0,        -- 0=pending, 1=approved, -1=rejected (DCD: approvata)
+        `request_date` TEXT DEFAULT (date('now')),
+        FOREIGN KEY (`collaborator_id`) REFERENCES `Collaborators` (`id`)
+    );
+
+-- Mappa l'entità "Performance" del Modello di Dominio  
+-- Attributi: note
+-- Relazione: relativa a Collaboratore, opzionalmente a Evento
+CREATE TABLE
+    `PerformanceNotes` (
+        `id` INTEGER PRIMARY KEY AUTOINCREMENT,
+        `collaborator_id` INTEGER NOT NULL,
+        `event_id` INTEGER,                  -- opzionale, collegamento a evento
+        `author_id` INTEGER NOT NULL,        -- chi ha scritto la nota (User organizzatore)
+        `note` TEXT NOT NULL,
+        `created_at` TEXT DEFAULT (datetime('now')),
+        FOREIGN KEY (`collaborator_id`) REFERENCES `Collaborators` (`id`),
+        FOREIGN KEY (`event_id`) REFERENCES `Events` (`id`),
+        FOREIGN KEY (`author_id`) REFERENCES `Users` (`id`)
+    );
+
+-- Mappa la relazione "disponibile per" tra Collaboratore e Turno nel Modello di Dominio
+-- confirmed=1 significa che il collaboratore è stato "chiamato" e vincolato (vedi contratto 3a.1)
+CREATE TABLE
+    `CollaboratorAvailability` (
+        `id` INTEGER PRIMARY KEY AUTOINCREMENT,
+        `collaborator_id` INTEGER NOT NULL,
+        `shift_id` INTEGER NOT NULL,
+        `confirmed` INTEGER DEFAULT 0,       -- 0=disponibile, 1=assegnato/vincolato
+        FOREIGN KEY (`collaborator_id`) REFERENCES `Collaborators` (`id`),
+        FOREIGN KEY (`shift_id`) REFERENCES `Shifts` (`id`),
+        UNIQUE(`collaborator_id`, `shift_id`)
     );
 
 CREATE TABLE
@@ -941,11 +1008,14 @@ INSERT INTO Users (username) VALUES
 ('Francesca'); -- ID 8
 
 -- Next, set up the role entries in Roles table (if not already present)
+-- PROPRIETARIO (id=4) è il ruolo che permette: aggiungere collaboratori, promuovere, approvare ferie
+-- (vedi main.tex estensioni 2a, 3b, 3c)
 INSERT OR IGNORE INTO Roles (id, role) VALUES
 (0,'CUOCO'),
 (1, 'CHEF'),
 (2, 'ORGANIZZATORE'),
-(3, 'SERVIZIO');
+(3, 'SERVIZIO'),
+(4, 'PROPRIETARIO');  -- Nuovo ruolo per UC "Gestire il Personale"
 
 -- Now assign roles to users
 -- Staff (SERVIZIO)
@@ -973,7 +1043,31 @@ INSERT INTO UserRoles (user_id, role_id) VALUES
 (5, 0),        -- Antonio is both chef and cook
 (7, 3),     -- Giovanni is both organizer and wait staff
 (4, 3),     -- Sofia is both cook and wait staff
-(6, 2); -- Chiara is both chef and organizer
+(6, 2), -- Chiara is both chef and organizer
+(7, 4);  -- Giovanni is also PROPRIETARIO (può aggiungere collaboratori, promuovere, approvare ferie)
+
+-- ===== PERSONNEL MANAGEMENT SAMPLE DATA =====
+-- Dati esempio che simulano la situazione descritta nelle interviste (Robert e Raffaele)
+
+-- Collaboratori: mix di permanenti e occasionali
+INSERT INTO Collaborators (name, contact, fiscal_code, address, occasional, active, vacation_days, user_id) VALUES
+('Mario Rossi', '+39 333 1234567', 'RSSMRA80A01H501Z', 'Via Roma 10, Torino', 0, 1, 20, 1),      -- permanente, collegato a Marco (User)
+('Luigi Bianchi', '+39 334 7654321', 'BNCLGU85B15F205X', 'Via Milano 5, Torino', 0, 1, 15, NULL), -- permanente, non usa il sistema
+('Anna Verdi', '+39 335 1111111', NULL, NULL, 1, 1, 0, NULL),                                      -- occasionale, solo contatto
+('Giuseppe Neri', '+39 336 2222222', NULL, NULL, 1, 1, 0, NULL),                                   -- occasionale
+('Francesca Gialli', '+39 337 3333333', 'GLLFNC90C45D969P', 'Via Napoli 20, Torino', 1, 0, 0, NULL); -- occasionale, inattivo (eliminato)
+
+-- Richieste Ferie (esempio pending e approvata)
+INSERT INTO LeaveRequests (collaborator_id, start_date, end_date, approved) VALUES
+(1, '2025-08-01', '2025-08-15', 1),    -- Mario: ferie approvate (14 giorni)
+(2, '2025-07-20', '2025-07-25', 0),    -- Luigi: richiesta pending (5 giorni)
+(1, '2025-12-23', '2025-12-31', 0);    -- Mario: richiesta pending per Natale
+
+-- Note Performance (esempio di quello che Raffaele farebbe dopo ogni evento)
+INSERT INTO PerformanceNotes (collaborator_id, event_id, author_id, note) VALUES
+(1, 1, 7, 'Ottimo lavoro al Gala Aziendale. Puntuale e professionale.'),
+(3, 1, 7, 'Prima esperienza, un po'' nervosa ma ha imparato in fretta.'),
+(4, 1, 8, 'Molto affidabile, consiglio per eventi futuri.');
 
 -- First create a menu
 INSERT INTO Menus (title, owner_id, published) 

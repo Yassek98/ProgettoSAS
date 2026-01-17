@@ -32,9 +32,8 @@ public class PersistenceManager {
                 // Create the parent directory if it doesn't exist
                 dbFile.getParentFile().mkdirs();
 
-                try (Connection conn = DriverManager.getConnection(URL)) {
-                    // Connection is automatically closed by try-with-resources
-                }
+                // Opening a connection auto-creates the SQLite database file
+                DriverManager.getConnection(URL).close();
 
                 // After creating the empty database, initialize it with schema
                 initializeDatabase(SCRIPT_PATH);
