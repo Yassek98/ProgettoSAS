@@ -1,0 +1,96 @@
+# ====================
+# Maven Build Output
+# ====================
+target/
+*.jar
+*.war
+*.ear
+
+# ====================
+# IDE Files
+# ====================
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Eclipse
+.classpath
+.project
+.settings/
+bin/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# ====================
+# Documentation Build Artifacts (LaTeX output)
+# ====================
+docs/*.aux
+docs/*.log
+docs/*.out
+docs/*.toc
+docs/*.synctex.gz
+docs/*.fls
+docs/*.fdb_latexmk
+docs/*.bbl
+docs/*.blg
+docs/*.pdf
+# Keep all source files (.tex, .md, images, etc.)
+
+# ====================
+# OS Generated Files
+# ====================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ====================
+# Logs
+# ====================
+*.log
+logs/
+
+# ====================
+# Temporary Files
+# ====================
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# ====================
+# Compiled Classes
+# ====================
+*.class
+
+# ====================
+# Package Files
+# ====================
+*.zip
+*.tar.gz
+*.rar
+
+# ====================
+# Maven Wrapper (if not committed)
+# ====================
+!.mvn/wrapper/maven-wrapper.jar
+!.mvn/wrapper/maven-wrapper.properties
+
+# ====================
+# Database Files
+# ====================
+# Ignore local SQLite databases (generated from tests/dev)
+*.db
+*.sqlite
+# BUT keep the SQL initialization scripts (needed by all devs)
+!database/*.sql

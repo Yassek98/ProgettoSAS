@@ -1,0 +1,582 @@
+\documentclass[12pt]{article} % invece del default 10pt
+\usepackage{graphicx} % Required for inserting images
+\usepackage[italian]{babel}
+\usepackage[hidelinks]{hyperref} % Nasconde i link rossi
+\usepackage{xcolor} % Per i colori
+\usepackage[top=2cm, bottom=2cm, left=2cm, right=2cm]{geometry} % Margini ridotti
+\usepackage{multicol} % Per le colonne
+\usepackage[table]{xcolor}
+\usepackage[svgnames]{xcolor} % Nel preambolo
+\usepackage{array}
+\usepackage{float} % Per [H] che forza la posizione
+\usepackage{rotating} % Necessario per l'ambiente sidewaysfigure
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{enumitem}
+
+
+\title{\Huge\bfseries\color[rgb]{0,0.4,0}Sviluppo e applicazioni software}
+\author{Veronica Bosso 1043229, Yassine Sadek 1051617
+}
+\date{Anno accademico 2024/2025}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+\newpage
+
+\section{Requisiti}
+\subsection{Use Case Dettagliato (\textbf{UC})}
+\vspace{1.7\baselineskip}
+
+\textbf{GESTIRE IL PERSONALE}\mbox{}\\[2mm]
+Gestire il personale significa inserire i dati dei lavoratori e eventualmente modificarli/eliminarli. Significa cioè gestire altri dati rilevanti che riguardano la vita del personale dentro l’azienda per es. ferie, carriera ...
+
+\vspace{2\baselineskip}
+
+\noindent\textbf{\large\color[rgb]{0,0.4,0}Analisi dell'User Stories}\mbox{}
+
+% Due elenchi affiancati in colonne
+\begin{multicols}{2}
+
+% Primo elenco (colonna sinistra)
+\textbf{Robert}
+\begin{enumerate}
+    \item Ha un elenco di persone che può contattare via e-mail o whatsapp, per gestire il personale degli eventi
+    \item Riceve segnalazioni per nuovo personale: segna nome e contatto
+    \item Completa le informazioni (indirizzo e cod. fiscale) al primo ingaggio
+    \item Opzionalmente, consulta lo storico degli eventi e si confronta con gli event manager per valutare un'\textbf{assunzione} permanente.
+    \item Riceve e valuta le richieste di \textbf{ferie} in base alla disponibilità e agli eventi pianificati.
+    \item Se la richiesta è accettata, aggiorna le informazioni del personale.
+\end{enumerate}
+
+\columnbreak % Forza il passaggio alla colonna successiva
+
+% Secondo elenco (colonna destra)
+\textbf{Raffaele}
+\begin{enumerate}
+    \item Controlla le disponibilità del personale (prima quello permanente)
+    \item Se rimangono scoperti dei ruoli li cerca nell’elenco dei collaboratori occasionali
+    \item Se qualcuno non è più disponibile lo cancella dall’elenco, o aggiorna le informazioni se cambiano
+    \item Prende nota delle performance del personale per future valutazioni in caso di possibilità di assunzione ``permanente''.
+\end{enumerate}
+
+\end{multicols}
+
+% Spazio prima delle conclusioni
+\vspace{1cm}
+
+% Sezione conclusioni
+\noindent\textbf{Processo combinato: Robert (proprietario, organizzatore) e Raffaele (organizzatore)}
+
+\begin{enumerate}
+    \item Consulta l'elenco del personale\footnote{Unisce le azioni iniziali di entrambi gli organizzatori.}.
+
+    \item  Seleziona un membro del personale
+    \item \textbf{OPZIONALMENTE} decide di modificare le informazioni della persona selezionata, \textbf{OPPURE} decide di eliminare la persona dall'elenco del personale, in caso non sia più disponibile.\\
+    \textbf{OPPURE} Aggiunge una nuova persona all'elenco\footnote{Solo il proprietario può eseguire questa azione}, inserendo le informazioni preliminari (nome, contatto).\\ 
+    \textbf{OPPURE ANCORA} consulta lo storico degli eventi e le note sulle performance per valutarne l'operato.\\
+\textit{Se decide di promuovere il membro selezionato prosegue col passo 4, altrimenti termina il caso d'uso.}\\
+\textbf{OPPURE ANCORA}\footnote{Azione eseguibile solo dal proprietario, per gestire una richiesta di ferie} valuta la richiesta di ferie  incrociando il monte ferie residuo con gli eventi pianificati. \\
+\textit{Se decide di accettare la richiesta di ferie prosegue col passo 5, se no termina il caso d'uso}
+        \item Modifica lo stato del personale selezionato da "occasionale" a "permanente"\footnote{Azione eseguibile solo dal proprietario, consultando gli organizzatori interessati, per gestire la carriera di un collaboratore}.
+        \item Modifica lo stato del personale selezionato da "Disponibile" a "In ferie" per il periodo di ferie richiesto.
+\end{enumerate}
+\vspace{2\baselineskip}
+
+\noindent\textbf{\large\color[rgb]{0,0.4,0}Informazioni generali}\mbox{}\\[2mm]
+\textbf{Nome caso d'uso}: Gestire il personale.\\
+\textbf{Portata}: Sistema gestionale del personale.\\
+\textbf{Livello}: Obiettivo utente.\\
+\textbf{Attore primario}: Organizzatore, proprietario.\\
+\textbf{Parti Interessate}: Proprietario, organizzatori, personale.\\
+\textbf{Pre-condizioni}: L'attore è autenticato nel sistema gestionale come Organizzatore, per alcuni operazioni l'attore deve essere autenticato come Proprietario.\\
+\textbf{Garanzie di successo o post-condizioni}: Le modifiche ai dati del personale sono salvate in modo persistente e tracciate. L'elenco del personale è aggiornato.
+\vspace{0.3cm}
+
+\subsubsection{Scenario Principale di successo}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\rowcolors{1}{}{}
+\begin{tabular}{|c|>{\raggedright\arraybackslash}p{0.45\textwidth}|>{\raggedright\arraybackslash}p{0.45\textwidth}|}
+\hline
+\rowcolor{ForestGreen!40}
+\textbf{\#} & \multicolumn{1}{|c|}{\textbf{Attore}} & \multicolumn{1}{|c|}{\textbf{Sistema}} \\
+\hline
+    1 & Consulta l'elenco del personale.&   Fornisce l'elenco completo del personale, con opzioni di ricerca e filtro\\\hline
+    2& Seleziona un membro del personale dall'elenco.	&Fornisce i dati e il profilo completo della persona selezionata.\\\hline
+
+ 3& Opzionalmente decide di modificare le informazioni della persona selezionata (es. dati di contatto, indirizzo).& Salva le modifiche apportate e conferma l'avvenuto aggiornamento.\\\hline
+  & \textit{Termina il caso d’uso} &\\ \hline
+\end{tabular}
+\end{center}
+
+\newpage
+
+\subsubsection{Estensioni}
+\vspace{1.5\baselineskip}
+
+\noindent\textbf{\large\color[rgb]{0,0.4,0} Estensione 2a - \textbf{Aggiunta personale}}
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\rowcolors{1}{}{}
+\begin{tabular}{|c|>{\raggedright\arraybackslash}p{0.45\textwidth}|>{\raggedright\arraybackslash}p{0.45\textwidth}|}
+\hline
+\rowcolor{ForestGreen!40}
+\textbf{\#} & \multicolumn{1}{|c|}{\textbf{Attore}} & \multicolumn{1}{|c|}{\textbf{Sistema}} \\
+\hline
+   2a.1& Seleziona l'opzione per aggiungere una nuova persona.&   Presenta un modulo vuoto per
+l’inserimento dei dati del nuovo membro del personale.\\\hline
+ 2a.2& Inserisce le informazioni preliminari (nome, contatto) e conferma.&Salva i dati inseriti e aggiunge una nuova persona all'elenco.\\\hline
+ & \textit{Termina il caso d’uso}&\\ \hline
+\end{tabular}
+\end{center}
+\vspace{1.5\baselineskip}
+
+\noindent\textbf{\large\color[rgb]{0,0.4,0} Estensione 3a - Eliminazione personale}
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\rowcolors{1}{}{}
+\begin{tabular}{|c|>{\raggedright\arraybackslash}p{0.45\textwidth}|>{\raggedright\arraybackslash}p{0.45\textwidth}|}
+\hline
+\rowcolor{ForestGreen!40}
+\textbf{\#} & \multicolumn{1}{|c|}{\textbf{Attore}} & \multicolumn{1}{|c|}{\textbf{Sistema}} \\
+\hline
+   3a.1& Decide di eliminare dall'elenco la persona selezionata.&   Imposta lo stato del collaboratore a 'inattivo' e lo rimuove dell'elenco principale.\\\hline
+ & \textit{Termina il caso d’uso}&\\\hline
+\end{tabular}
+\end{center}
+\vspace{1.5\baselineskip}
+
+\noindent\textbf{\large\color[rgb]{0,0.4,0} Estensione 3b - Gestione carriera (Promozione)}
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\rowcolors{1}{}{}
+\begin{tabular}{|c|>{\raggedright\arraybackslash}p{0.45\textwidth}|>{\raggedright\arraybackslash}p{0.45\textwidth}|}
+\hline
+\rowcolor{ForestGreen!40}
+\textbf{\#} & \multicolumn{1}{|c|}{\textbf{Attore}} & \multicolumn{1}{|c|}{\textbf{Sistema}} \\
+\hline
+   3b.1& Consulta lo storico
+degli eventi e le note sulle performance per
+valutarne l’operato.&   Fornisce lo storico degli eventi a cui il
+collaboratore ha partecipato e le relative
+note di valutazione.\\\hline
+ 3b.2& Opzionalmente modifica lo stato del personale selezionato
+da ”occasionale” a ”permanente”.&Aggiorna lo stato contrattuale del
+collaboratore e registra la promozione.\\\hline
+ & \textit{Termina il caso d’uso}&\\ \hline
+\end{tabular}
+\end{center}
+\newpage
+
+\noindent\textbf{\large\color[rgb]{0,0.4,0} Estensione 3c - Gestione richiesta di ferie}
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\rowcolors{1}{}{}
+\begin{tabular}{|c|>{\raggedright\arraybackslash}p{0.45\textwidth}|>{\raggedright\arraybackslash}p{0.45\textwidth}|}
+\hline
+\rowcolor{ForestGreen!40}
+\textbf{\#} & \multicolumn{1}{|c|}{\textbf{Attore}} & \multicolumn{1}{|c|}{\textbf{Sistema}} \\\hline
+ 3c.1& Seleziona una richiesta di ferie pendente per il membro del personale&Mostra il periodo delle ferie richieste.\\\hline
+
+   3c.2& Valuta la richiesta di
+ferie incrociando il monte ferie residuo con
+gli eventi pianificati.&   Fornisce i dati di supporto alla decisione:
+monte ferie residuo del collaboratore e
+calendario che evidenzia i conflitti con i
+turni gi`a assegnati.\\\hline
+ 3c.3& Opzionalmente modifica lo stato del personale selezionato
+da ”Disponibile” a ”In ferie” per il periodo
+di ferie richiesto.&Aggiorna la disponibilità del collaboratore,
+e scala dal monte ferie il periodo di ferie
+che è stato accettato.\\\hline
+ & \textit{Termina il caso d’uso}&\\ \hline
+\end{tabular}
+\end{center}
+\vspace{1.5\baselineskip}
+
+\subsubsection{Eccezioni}
+\vspace{1.5\baselineskip}
+
+\noindent\textbf{\large\color{red} Eccezione 2a.1a - Permessi non sufficenti}
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\rowcolors{1}{}{}
+\begin{tabular}{|c|>{\raggedright\arraybackslash}p{0.45\textwidth}|>{\raggedright\arraybackslash}p{0.45\textwidth}|}
+\hline
+\rowcolor{ForestGreen!40}
+\textbf{\#} & \multicolumn{1}{|c|}{\textbf{Attore}} & \multicolumn{1}{|c|}{\textbf{Sistema}} \\
+\hline
+   2a.1a.1& Seleziona l'opzione per aggiungere una nuova persona.&   Mostra messaggio di errore: l'attore che sta cercando di eseguire questa operazione non ha permessi sufficenti (solo il proprietario può aggiungere personale).\\\hline
+ & \textit{Termina il caso d’uso}&\\\hline
+\end{tabular}
+\end{center}
+\vspace{1.5\baselineskip}
+
+\noindent\textbf{\large\color{red} Eccezione 3a.1a - \textbf{Impossibile eliminare: collaboratore con incarichi futuri} }
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\rowcolors{1}{}{}
+\begin{tabular}{|c|>{\raggedright\arraybackslash}p{0.45\textwidth}|>{\raggedright\arraybackslash}p{0.45\textwidth}|}
+\hline
+\rowcolor{ForestGreen!40}
+\textbf{\#} & \multicolumn{1}{|c|}{\textbf{Attore}} & \multicolumn{1}{|c|}{\textbf{Sistema}} \\
+\hline
+   3a.1a.1& 		Decide di eliminare dall’elenco la persona
+selezionata.&   Blocca l'eliminazione. Comunica l'errore e mostra l'elenco degli incarichi futuri che impediscono l'operazione.
+\\\hline
+ & \textit{Termina il caso d’uso}&\\\hline
+\end{tabular}
+\end{center}
+\vspace{2\baselineskip}
+\newpage
+
+\noindent\textbf{\large\color{red} Eccezione 3b.2a - \textbf{Permessi non sufficenti} }
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\rowcolors{1}{}{}
+\begin{tabular}{|c|>{\raggedright\arraybackslash}p{0.45\textwidth}|>{\raggedright\arraybackslash}p{0.45\textwidth}|}
+\hline
+\rowcolor{ForestGreen!40}
+\textbf{\#} & \multicolumn{1}{|c|}{\textbf{Attore}} & \multicolumn{1}{|c|}{\textbf{Sistema}} \\
+\hline
+   3b.2a.1& 		Modifica lo stato del personale selezionato da ”occasionale” a ”permanente”.&   Mostra messaggio di errore: l’attore che sta cercando di eseguire questa
+operazione non ha permessi sufficenti (solo
+il proprietario può promuovere il personale).\\\hline
+ & \textit{Termina il caso d’uso}&\\\hline
+\end{tabular}
+\end{center}
+\vspace{2\baselineskip}
+
+\noindent\textbf{\large\color{red} Eccezione 3c.3a - \textbf{Permessi non sufficenti} }
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\rowcolors{1}{}{}
+\begin{tabular}{|c|>{\raggedright\arraybackslash}p{0.45\textwidth}|>{\raggedright\arraybackslash}p{0.45\textwidth}|}
+\hline
+\rowcolor{ForestGreen!40}
+\textbf{\#} & \multicolumn{1}{|c|}{\textbf{Attore}} & \multicolumn{1}{|c|}{\textbf{Sistema}} \\
+\hline
+    3c.3a.1& 		Modifica lo stato del personale selezionato
+da ”Disponibile” a ”In ferie” per il periodo
+di ferie richiesto.&   Mostra messaggio di errore: l’attore che sta cercando di eseguire questa
+operazione non ha permessi sufficenti (solo
+il proprietario può accettare una richiesta di ferie).\\\hline
+ & \textit{Termina il caso d’uso}&\\\hline
+\end{tabular}
+\end{center}
+\vspace{1.5\baselineskip}
+
+\noindent\textbf{\large\color{red} Eccezione 3c.3b - \textbf{Numero ferie superato} }
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\rowcolors{1}{}{}
+\begin{tabular}{|c|>{\raggedright\arraybackslash}p{0.45\textwidth}|>{\raggedright\arraybackslash}p{0.45\textwidth}|}
+\hline
+\rowcolor{ForestGreen!40}
+\textbf{\#} & \multicolumn{1}{|c|}{\textbf{Attore}} & \multicolumn{1}{|c|}{\textbf{Sistema}} \\
+\hline
+    3c.3b.1& 		Modifica lo stato del personale selezionato
+da ”Disponibile” a ”In ferie” per il periodo
+di ferie richiesto.&   Non può eseguire l'azione perchè il monte ferie non copre la richiesta di ferie. Segnale l'errore.\\\hline
+ & \textit{Termina il caso d’uso}&\\\hline
+\end{tabular}
+\end{center}
+\vspace{1.5\baselineskip}
+\newpage
+
+\subsection{\textbf{Modello di Dominio}}
+% Inserire qui il modello di dominio
+\begin{figure}[H]
+    \centering
+    \hspace*{-1.2cm} % Sposta a sinistra di 0.5cm
+    \includegraphics[width=1.15\linewidth, height=0.9\textheight, keepaspectratio]{MD_3UC-U3.drawio.png}
+    \caption{Modello di Dominio dopo l'aggiunta di gestione del personale}
+    \label{fig:dominio}
+\end{figure}
+\subsubsection{Regole di Business}
+% Inserire qui le regole di business
+\begin{itemize}
+    \item Una voce puo' comparire in un  menu' all'interno di una sezione oppure come voce "libera" quindi  verrà valorizzata  una e una sola  delle due  relazioni appartiene
+    \item Il Cuoco che esegue il Compito  deve essere disponibile  nel Turno in cui lo svolge 
+    \item Se un compito ha completato = sì allora  il compito deve avere obbligatoriamente  associato un cuoco ed un turno. In alternativa,  tale assegnamento non è obbligatorio.
+\end{itemize}
+\newpage
+
+\subsection{System Sequence Diagram (\textbf{SSD})}
+\vspace{1.5\baselineskip}
+\subsubsection{Scenario Principale di successo}
+% Inserire qui gli SSD
+
+
+% ===================================================================
+% FIGURA 1: SCENARIO PRINCIPALE DI SUCCESSO
+% Immagine: input_file_0.png
+% ===================================================================
+\begin{figure}[H]
+    \centering
+    % La riga \hspace sposta l'immagine a sinistra. 
+    % Potrebbe non essere necessaria per questa immagine più stretta.
+    % Puoi commentarla (mettendo un % all'inizio) o rimuoverla per centrarla normalmente.
+    \includegraphics[width=1.0\linewidth, keepaspectratio]{input_file_0.png}
+    \caption{Diagramma di Sequenza: Scenario Principale di Successo (Modifica di un collaboratore).}
+    \label{fig:ssd-successo}
+\end{figure}
+
+\subsubsection{Estensioni ed Eccezioni}
+% ===================================================================
+% FIGURA 2: FLUSSO DI AGGIUNTA DI UN NUOVO COLLABORATORE
+% Immagine: input_file_2.png
+% ===================================================================
+\begin{figure}[H]
+    \centering
+    % Questi valori potrebbero necessitare di aggiustamenti per adattarsi alla tua pagina
+    \hspace*{-1cm} 
+    \includegraphics[width=1\linewidth, keepaspectratio]{input_file_2.png}
+    \caption{Diagramma di Sequenza: Flusso di Aggiunta di un Nuovo Collaboratore \\
+    (Estensione 2a).}
+    \label{fig:ssd-aggiunta}
+\end{figure}
+
+
+% ===================================================================
+% FIGURA 3: AZIONI AVANZATE SUL COLLABORATORE 
+% ===================================================================
+\begin{figure}[H]
+    \centering
+    % Rimuovi completamente \hspace* per evitare problemi di allineamento
+    % Usiamo \textwidth che è la larghezza effettiva della pagina (escludendo i margini).
+    \includegraphics[width=0.73\textwidth]{input_file_1.png}
+    \caption{Diagramma di Sequenza: Azioni Avanzate sul Collaboratore (Estensioni 3a, 3b, 3c).}
+    \label{fig:ssd-avanzate}
+\end{figure}
+
+\subsection{\textbf{Contratti delle Operazioni}}
+\vspace{1.5\baselineskip}
+
+\textbf{Pre-condizione generale}: l'attore è identificato con un'istanza \texttt{\textit{org}} di \texttt{Collaboratore} e \texttt{\textit{org}} \textbf{ricopre} un \texttt{Ruolo} con i permessi necessari.
+
+\subsubsection*{Operazioni di Interrogazione}
+Queste operazioni recuperano dati senza modificare lo stato del sistema e, pertanto, non hanno post-condizioni.
+
+\begin{enumerate}
+    \item {\fontseries{b}\selectfont\large visualizzaElencoPersonale()}\\
+    \textbf{Pre-condizioni:}
+    \begin{itemize}[leftmargin=*,noitemsep,topsep=-5pt]
+        \item[-] nessuna oltre a quella generale
+    \end{itemize}
+    \textbf{Post-condizioni:}
+     \begin{itemize}[leftmargin=*,noitemsep,topsep=-5pt]
+        \item[-] nessuna
+    \end{itemize}
+    
+    \item {\fontseries{b}\selectfont\large visualizzaProfiloCompleto(\underline{collab}: Collaboratore)}\\
+    \textbf{Pre-condizioni:}
+    \begin{itemize}[leftmargin=*,noitemsep,topsep=-5pt]
+        \item[-] nessuna oltre a quella generale
+    \end{itemize}
+    \textbf{Post-condizioni:}
+     \begin{itemize}[leftmargin=*,noitemsep,topsep=-5pt]
+        \item[-] nessuna
+    \end{itemize}
+
+    \item[3b.1] {\fontseries{b}\selectfont\large visualizzaStoricoPerformance(\underline{collab}: Collaboratore)}\\
+    \textbf{Pre-condizioni:}
+    \begin{itemize}[leftmargin=*,noitemsep,topsep=-5pt]
+        \item[-] è in corso la visualizzazione del profilo di \texttt{\textit{collab}}
+    \end{itemize}
+    \textbf{Post-condizioni:}
+     \begin{itemize}[leftmargin=*,noitemsep,topsep=-5pt]
+        \item[-] nessuna
+    \end{itemize}
+
+    \item[3c.1] {\fontseries{b}\selectfont\large visualizzaRichiesteFerie(\underline{collab}: Collaboratore)}\\
+    \textbf{Pre-condizioni:}
+    \begin{itemize}[leftmargin=*,noitemsep,topsep=-5pt]
+        \item[-] è in corso la visualizzazione del profilo di \texttt{\textit{collab}}
+    \end{itemize}
+    \textbf{Post-condizioni:}
+     \begin{itemize}[leftmargin=*,noitemsep,topsep=-5pt]
+        \item[-] nessuna
+    \end{itemize}
+
+    \item[3c.2] {\fontseries{b}\selectfont\large valutaRichiestaFerie(\underline{rich}: RichiestaFerie)}\\
+    \textbf{Pre-condizioni:}
+    \begin{itemize}[leftmargin=*,noitemsep,topsep=-5pt]
+        \item[-] è in corso la visualizzazione delle richieste ferie di un collaboratore
+        \item[-] \texttt{\textit{rich}} è \textbf{avanzata da} quel collaboratore
+    \end{itemize}
+    \textbf{Post-condizioni:}
+     \begin{itemize}[leftmargin=*,noitemsep,topsep=-5pt]
+        \item[-] nessuna
+    \end{itemize}
+\end{enumerate}
+\newpage
+
+\subsubsection*{Operazioni di Modifica}
+
+\begin{enumerate}
+    \item[2a.1] {\fontseries{b}\selectfont\large iniziaAggiuntaCollaboratore()}\\
+    \textbf{Pre-condizioni:}
+    \begin{itemize}[leftmargin=*,noitemsep,topsep=-5pt]
+        \item[-] \texttt{\textit{org}} \textbf{ricopre} un \texttt{Ruolo} con \texttt{tipo = 'Proprietario'}.
+    \end{itemize}
+    \textbf{Post-condizioni:}
+    \begin{itemize}[leftmargin=*,noitemsep,topsep=-5pt]
+        \item[-] È stata creata un'istanza \texttt{\textit{collab}} di \texttt{Collaboratore}
+        \item[-] È in corso l'aggiunta del nuovo \texttt{Collaboratore} \texttt{\textit{collab}}
+    \end{itemize}
+
+    \item[2a.2] {\fontseries{b}\selectfont\large aggiungiCollaboratore(\underline{nome}: testo, \underline{contatto}: numero)}\\
+    \textbf{Pre-condizioni:}
+    \begin{itemize}[leftmargin=*,noitemsep,topsep=-5pt]
+        \item[-] è in corso l'aggiunta del nuovo \texttt{Collaboratore} \texttt{\textit{collab}}
+    \end{itemize}
+    \textbf{Post-condizioni:}
+    \begin{itemize}[leftmargin=*,noitemsep,topsep=-5pt]
+        \item[-] \texttt{\textit{collab}.nome = \underline{nome}}
+        \item[-] \texttt{\textit{collab}.contatto = \underline{contatto}}
+        \item[-] \texttt{\textit{collab}.occasionale = 'si'}
+        \item[-] \texttt{\textit{collab}.attivo = 'si'}
+    \end{itemize}
+
+    \item[3.] {\fontseries{b}\selectfont\large modificaInfoProfilo(\underline{nuovoNome?}: testo, \underline{nuovoCodFisc?}: testo,\\ \underline{nuovoContatto?}: numero, \underline{nuovoIndirizzo?}: testo)}\\
+    \textbf{Pre-condizioni:}
+    \begin{itemize}[leftmargin=*,noitemsep,topsep=-5pt]
+        \item[-] è in corso la visualizzazione del profilo di \texttt{\textit{collab}}
+    \end{itemize}
+    \textbf{Post-condizioni:}
+    \begin{itemize}[leftmargin=*,noitemsep,topsep=-5pt]
+        \item[-] [se specificato] \texttt{\textit{collab}.nome = \underline{nuovoNome}}
+        \item[-] [se specificato] \texttt{\textit{collab}.codFisc = \underline{nuovoCodFisc}}
+        \item[-] [se specificato] \texttt{\textit{collab}.contatto = \underline{nuovoContatto}}
+        \item[-] [se specificato] \texttt{\textit{collab}.indirizzo = \underline{nuovoIndirizzo}}
+    \end{itemize}
+
+    \item[3a.1] {\fontseries{b}\selectfont\large eliminaCollaboratore()}\\% Nota: qui si assume che collab sia noto dal contesto "in corso"
+    \textbf{Pre-condizioni:}
+    \begin{itemize}[leftmargin=*,noitemsep,topsep=-5pt]
+        \item[-] è in corso la visualizzazione del profilo di \texttt{\textit{collab}}
+        \item[-] non esiste un'istanza \texttt{\textit{t}} di \texttt{Turno} tale che \texttt{\textit{collab}} è \textbf{disponibile per} \texttt{\textit{t}} e \\ \texttt{t.data > data\_corrente}
+    \end{itemize}
+    \textbf{Post-condizioni:}
+    \begin{itemize}[leftmargin=*,noitemsep,topsep=-5pt]
+        \item[-] \texttt{\textit{collab}.attivo = 'no'}
+    \end{itemize}
+
+    \item[3b.2] {\fontseries{b}\selectfont\large promuoviCollaboratore()}\\
+    \textbf{Pre-condizioni:}
+    \begin{itemize}[leftmargin=*,noitemsep,topsep=-5pt]
+        \item[-] è in corso la visualizzazione del profilo di \texttt{\textit{collab}}
+        \item[-] \texttt{\textit{org}} \textbf{ricopre} un \texttt{Ruolo} con \texttt{tipo = 'Proprietario'}
+        \item[-] \texttt{\textit{collab}.occasionale = 'si'}
+    \end{itemize}
+    \textbf{Post-condizioni:}
+    \begin{itemize}[leftmargin=*,noitemsep,topsep=-5pt]
+        \item[-] \texttt{\textit{collab}.occasionale = 'no'}
+    \end{itemize}
+    \newpage
+
+    \item[3c.3] {\fontseries{b}\selectfont\large aggiornaStatoFerie(\underline{rich}: RichiestaFerie, \underline{approvata}: si/no)}\\
+    \textbf{Pre-condizioni:}
+    \begin{itemize}[leftmargin=*,noitemsep,topsep=-5pt]
+        \item[-] \texttt{\textit{org}} \textbf{ricopre} un \texttt{Ruolo} con \texttt{tipo = 'Proprietario'}
+        \item[-] sia \texttt{\textit{collab}} il \texttt{Collaboratore} tale che \texttt{\textit{rich}} è \textbf{avanzata da} \texttt{\textit{collab}}
+        \item[-] \texttt{\textit{rich}.approvata = 'no'} (o comunque è pendente)
+        \item[-] [se \underline{approvata} = 'si'] \texttt{\textit{collab}.monteFerie} $\geq$ (\texttt{\textit{rich}.dataFine - \textit{rich}.dataInizio})
+    \end{itemize}
+    \textbf{Post-condizioni:}
+    \begin{itemize}[leftmargin=*,noitemsep,topsep=-5pt]
+        \item[-] \texttt{\textit{rich}.approvata = \underline{approvata}}
+        \item[-] [se \underline{approvata} = 'si']
+        \begin{itemize}
+            \item[-] \texttt{\textit{collab}.inFerie = 'si'}
+            \item[-] \texttt{\textit{collab}.monteFerie = \textit{collab}.monteFerie@pre - (\textit{rich}.dataFine - \textit{rich}.dataInizio)}
+        \end{itemize}
+    \end{itemize}
+\end{enumerate}
+\newpage
+
+\section{Progettazione}
+\subsection{Design Class Diagram (\textbf{DCD})}
+% Inserire qui il DCD completo per UC1, UC2 e UC3
+\begin{figure}[H]
+    \centering
+    \hspace*{-1.7cm}
+    \includegraphics[width=1.2\linewidth, keepaspectratio]{DCD definitivo.jpg}
+    \caption{DCD copre: Gestione dei menù, gestione dei compiti della cucine e \textbf{gestione del personale}}
+    \label{fig:ssd-successo}
+\end{figure}
+
+\subsection{Design Sequence Diagram (\textbf{DSD})}
+\subsubsection{DSD 1 - [addCollaborator]}
+% Descrizione breve
+\begin{figure} [H]
+    \centering
+    \hspace*{-1.8cm}
+    \includegraphics[width=1.2\linewidth]{addCollaborator.png}
+    \caption{DSD \textbf{addCollaborator(name, contact)}}
+    \label{fig:placeholder}
+\end{figure}
+\newpage
+
+\subsubsection{DSD 2 - [updateCollaboratorInfo]}
+% Descrizione breve
+\begin{figure}[H]
+    \centering
+    \hspace*{-1.8cm}
+    \includegraphics[width=1.2\linewidth]{updateCollaboratorInfo.png}
+    \caption{DSD \textbf{updateCollaboratorInfo(collab, ...)}}
+    \label{fig:placeholder}
+\end{figure}
+\newpage
+
+\subsubsection{DSD 3 - [removeCollaborator]}
+% Descrizione breve
+\begin{figure}[H]
+    \centering
+    \hspace*{-1.8cm}
+    \includegraphics[width=1.2\linewidth]{removeCollaborator.png}
+    \caption{Enter Caption}
+    \label{fig:placeholder}
+\end{figure}
+\newpage
+
+\subsubsection{DSD 4 - [evaluateLeaveRequest]}
+% Descrizione breve
+\begin{figure}[H]
+    \centering
+    \hspace*{-1.8cm}
+    \includegraphics[width=1.2\linewidth]{evalueteLeaveRequest.png}
+    \caption{Enter Caption}
+    \label{fig:placeholder}
+\end{figure}
+\newpage
+
+\subsubsection{DSD 5 - [promoteCollaborator]}
+% Descrizione breve
+\begin{figure}[H]
+    \centering
+    \hspace*{-1.8cm}
+    \includegraphics[width=1.2\linewidth]{promoteCollaborator.png}
+    \caption{Enter Caption}
+    \label{fig:placeholder}
+\end{figure}
+\newpage
+
+\subsubsection{DSD 6 - [logPerformance]}
+% Descrizione breve
+\begin{figure}[H]
+    \centering
+    \hspace*{-1.8cm}
+    \includegraphics[width=1.2\linewidth]{logPerformance.png}
+    \caption{Enter Caption}
+    \label{fig:placeholder}
+\end{figure}
+
+\end{document}
