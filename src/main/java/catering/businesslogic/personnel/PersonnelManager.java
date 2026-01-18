@@ -141,7 +141,7 @@ public class PersonnelManager {
      * @return Il nuovo collaboratore creato
      * @throws UseCaseLogicException se l'utente non è Proprietario
      */
-    public Collaborator addCollaborator(String name, String contact) throws UseCaseLogicException {
+    public Collaborator addCollaborator(String name, String contact) throws UseCaseLogicException, PersonnelException {
         User currentUser = CatERing.getInstance().getUserManager().getCurrentUser();
         
         // Verifica permessi: solo il Proprietario può aggiungere (eccezione 2a.1a)
@@ -201,7 +201,7 @@ public class PersonnelManager {
      * @param collab Collaboratore da eliminare
      * @throws UseCaseLogicException se ha incarichi futuri (eccezione 3a.1a)
      */
-    public void removeCollaborator(Collaborator collab) throws UseCaseLogicException {
+    public void removeCollaborator(Collaborator collab) throws UseCaseLogicException, PersonnelException {
         User currentUser = CatERing.getInstance().getUserManager().getCurrentUser();
         
         // Verifica permessi

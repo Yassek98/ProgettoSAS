@@ -63,7 +63,7 @@ public class PersonnelIntegrationTest {
         
         @Test
         @DisplayName("addCollaborator: Owner può aggiungere collaboratori (estensione 2a)")
-        void testAddCollaborator_AsOwner_Success() throws UseCaseLogicException {
+        void testAddCollaborator_AsOwner_Success() throws UseCaseLogicException, PersonnelException {
             PersonnelManager pm = app.getPersonnelManager();
             
             // Act
@@ -81,7 +81,7 @@ public class PersonnelIntegrationTest {
         
         @Test
         @DisplayName("promoteCollaborator: Owner può promuovere (estensione 3b.2)")
-        void testPromoteCollaborator_AsOwner_Success() throws UseCaseLogicException {
+        void testPromoteCollaborator_AsOwner_Success() throws UseCaseLogicException, PersonnelException {
             PersonnelManager pm = app.getPersonnelManager();
             
             // Arrange: crea un collaboratore occasionale
@@ -226,7 +226,7 @@ public class PersonnelIntegrationTest {
         
         @Test
         @DisplayName("removeCollaborator: Organizer può eliminare (se senza incarichi)")
-        void testRemoveCollaborator_AsOrganizer_Success() throws UseCaseLogicException {
+        void testRemoveCollaborator_AsOrganizer_Success() throws UseCaseLogicException, PersonnelException {
             PersonnelManager pm = app.getPersonnelManager();
             
             // Prima devo fare login come Owner per creare un collaboratore da eliminare

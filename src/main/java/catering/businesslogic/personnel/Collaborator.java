@@ -58,8 +58,24 @@ public class Collaborator {
      * - collab.contatto = contatto
      * - collab.occasionale = 'si'
      * - collab.attivo = 'si'
+     * 
+     * @throws PersonnelException se esiste già un collaboratore attivo con lo stesso nome
      */
-    public static Collaborator create(String name, String contact) {
+    public static Collaborator create(String name, String contact) throws PersonnelException {
+        // Fix 3. Controllo duplicati attivi
+        final boolean[] duplicateFound = {false};
+        String query = "SELECT COUNT(*) as cnt FROM Collaborators WHERE name = '" + escape(name) + "' AND active = 1";
+        PersistenceManager.executeQuery(query, new ResultHandler() {
+            @Override
+            public void handle(ResultSet rs) throws SQLException {
+                duplicateFound[0] = rs.getInt("cnt") > 0;
+            }
+        });
+
+        if (duplicateFound[0]) {
+            throw new PersonnelException("Esiste già un collaboratore attivo con nome: " + name);
+        }
+
         Collaborator c = new Collaborator();
         c.name = name;
         c.contact = contact;
@@ -92,11 +108,17 @@ public class Collaborator {
     
     /**
      * Disattiva il collaboratore (contratto 3a.1 eliminaCollaboratore).
+     * Verifica che non ci siano turni futuri assegnati.
      * 
      * Post-condizione dal main.tex:
      * - collab.attivo = 'no'
+     * 
+     * @throws PersonnelException se il collaboratore ha turni futuri
      */
-    public void deactivate() {
+    public void deactivate() throws PersonnelException {
+        if (hasActiveAssignments()) {
+            throw new PersonnelException("Impossibile eliminare: il collaboratore ha turni futuri assegnati.");
+        }
         this.active = false;
     }
     
@@ -129,17 +151,24 @@ public class Collaborator {
      * Verifica se il collaboratore ha assegnazioni attive future.
      * Usato nel contratto 3a.1 per bloccare l'eliminazione.
      * 
-     * Controlla la tabella Assignment per incarichi con shift.data > oggi.
-     * (Correzione: controlla Assignment, non disponibilità, come da CORREZIONI.md)
+     * Controlla la tabella CollaboratorAvailability per turni confermati futuri.
      */
     public boolean hasActiveAssignments() {
         final boolean[] result = {false};
-        // Query per verificare assignment futuri (era: SELECT COUNT(*) FROM Assignment...)
-        // Nota: per ora controlliamo cook_id. In futuro potrebbe essere collaborator_id
-        // se estendiamo la tabella Assignment per supportare i collaboratori
+        // Fix 1. Query reale su CollaboratorAvailability
+        String query = "SELECT COUNT(*) as cnt " +
+                       "FROM CollaboratorAvailability ca " +
+                       "JOIN Shifts s ON ca.shift_id = s.id " +
+                       "WHERE ca.collaborator_id = " + this.id + 
+                       "  AND ca.confirmed = 1 " +
+                       "  AND s.date >= date('now')";
         
-        // Per ora restituiamo false se non ci sono Assignment (il sistema esistente usa User, non Collaborator)
-        // Questo verrà esteso quando integreremo i Collaborator con gli Assignment
+        PersistenceManager.executeQuery(query, new ResultHandler() {
+            @Override
+            public void handle(ResultSet rs) throws SQLException {
+                result[0] = rs.getInt("cnt") > 0;
+            }
+        });
         return result[0];
     }
     

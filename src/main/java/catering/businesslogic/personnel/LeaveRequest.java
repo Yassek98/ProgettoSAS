@@ -116,10 +116,31 @@ public class LeaveRequest {
     
     /**
      * Salva una nuova richiesta nel database.
+     * 
+     * @throws PersonnelException se esiste già una richiesta per lo stesso periodo
      */
-    public void save() {
+    public void save() throws PersonnelException {
+        // Fix 2. Controllo ferie sovrapposte
+        final boolean[] overlapFound = {false};
         String startStr = dateToStr(startDate);
         String endStr = dateToStr(endDate);
+        
+        String checkQuery = "SELECT COUNT(*) as cnt FROM LeaveRequests " +
+                            "WHERE collaborator_id = " + collaborator.getId() + 
+                            " AND approved = 1 " + // Controlla solo quelle GIÀ approvate (o anche pending? Meglio approved per ora)
+                            " AND (start_date <= '" + endStr + "' AND end_date >= '" + startStr + "')";
+                            
+        PersistenceManager.executeQuery(checkQuery, new ResultHandler() {
+            @Override
+            public void handle(ResultSet rs) throws SQLException {
+                overlapFound[0] = rs.getInt("cnt") > 0;
+            }
+        });
+
+        if (overlapFound[0]) {
+            throw new PersonnelException("Esiste già una richiesta ferie approvata per questo periodo.");
+        }
+
         String reqStr = dateToStr(requestDate);
         
         String query = "INSERT INTO LeaveRequests (collaborator_id, start_date, end_date, approved, request_date) " +
