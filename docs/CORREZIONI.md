@@ -176,3 +176,45 @@ public class Collaborator {
     private User user;  // OPZIONALE - null se non usa il sistema
 }
 ```
+
+---
+
+## ✅ Validazioni Logiche Implementate (2026-01-18)
+
+Le seguenti validazioni sono state implementate nel codice per prevenire inconsistenze:
+
+### 1. Controllo Nomi Duplicati (`Collaborator.create`)
+
+```java
+// Prima di creare un nuovo collaboratore, verifica che non esista già un attivo con lo stesso nome
+String query = "SELECT COUNT(*) FROM Collaborators WHERE name = ? AND active = 1";
+if (count > 0) {
+    throw new PersonnelException("Esiste già un collaboratore attivo con nome: " + name);
+}
+```
+
+### 2. Controllo Turni Futuri (`Collaborator.deactivate`)
+
+```java
+// Prima di disattivare, verifica se ha turni futuri confermati
+String query = "SELECT COUNT(*) FROM CollaboratorAvailability ca " +
+               "JOIN Shifts s ON ca.shift_id = s.id " +
+               "WHERE ca.collaborator_id = ? AND ca.confirmed = 1 AND s.date >= date('now')";
+if (count > 0) {
+    throw new PersonnelException("Impossibile eliminare: il collaboratore ha turni futuri assegnati.");
+}
+```
+
+### 3. Controllo Ferie Sovrapposte (`LeaveRequest.save`)
+
+```java
+// Prima di salvare una nuova richiesta, verifica sovrapposizioni con ferie già approvate
+String query = "SELECT COUNT(*) FROM LeaveRequests " +
+               "WHERE collaborator_id = ? AND approved = 1 " +
+               "AND (start_date <= ? AND end_date >= ?)";
+if (count > 0) {
+    throw new PersonnelException("Esiste già una richiesta ferie approvata per questo periodo.");
+}
+```
+
+> **Test**: Queste validazioni sono testate in `PersonnelStressTest.java` con scenari limite.

@@ -1,7 +1,7 @@
 # 📋 Gestione Personale - Walkthrough Tecnico
 
-> **Stato**: Completato (20/20 Test Unitari, 9/9 Test Integrazione)
-> **Branch**: develop/personnel-management
+> **Stato**: Completato (27 Test Totali: Unit, Integration, Stress)
+> **Ultimo aggiornamento**: 2026-01-18
 
 Questo documento descrive l'implementazione tecnica del modulo **Gestione del Personale** (UC d'esame).
 
@@ -16,7 +16,18 @@ Questo documento descrive l'implementazione tecnica del modulo **Gestione del Pe
 | **Persistence**| `catering.persistence.PersonnelPersistence` | Connessione al DB (Observer pattern) |
 | **Security** | `catering.businesslogic.user.User` | Aggiunto ruolo `PROPRIETARIO` (id=4) |
 
-## 2. Architettura & Design Patterns
+## 2. Validazioni Logiche Implementate
+
+### 🛡️ Controllo Nomi Duplicati
+`Collaborator.create()` impedisce la creazione di collaboratori con nome identico a uno già attivo.
+
+### 📅 Controllo Ferie Sovrapposte
+`LeaveRequest.save()` impedisce il salvataggio di richieste che si sovrappongono a ferie già approvate.
+
+### 🔒 Controllo Turni Futuri
+`Collaborator.deactivate()` impedisce la disattivazione se il collaboratore ha turni futuri confermati in `CollaboratorAvailability`.
+
+## 3. Architettura & Design Patterns
 
 ### Pattern Controller & Observer
 Come per gli altri moduli (Menu, Event), abbiamo usato un Manager che fa da Subject per la persistenza:
@@ -44,36 +55,16 @@ I permessi sono verificati programmaticamente dentro `PersonnelManager`:
 - **Organizer (Tutti)**: Possono modificare info, loggare performance, rimuovere (soft-delete).
 - **Cook/Staff**: Nessun accesso in scrittura.
 
-## 3. Guida ai Test
+## 4. Guida ai Test
 
 ### Unit Tests (`PersonnelTest.java`)
-Testano la logica pura senza database reale (o con DB in-memory simulato).
-- Verificano: calcolo date ferie, transizioni di stato (occasionale->permanente), soft-delete.
+Testano la logica pura con DB in-memory.
 
 ### Integration Tests (`PersonnelIntegrationTest.java`)
-**Cruciali per l'esame**. Eseguono un login simulato (`fakeLogin`) per testare le eccezioni di sicurezza.
-- `testAddCollaborator_AsOrganizer_Fails`: Verifica che Marinella non possa aggiungere gente.
-- `testAddCollaborator_AsOwner_Success`: Verifica che Giovanni possa farlo.
+Eseguono un login simulato (`fakeLogin`) per testare le eccezioni di sicurezza.
 
-## 4. Database Schema (SQLite)
-
-```sql
--- Collaboratori
-CREATE TABLE Collaborators (
-    id INTEGER PRIMARY KEY,
-    name TEXT,
-    occasional INTEGER, -- 1=Si, 0=No
-    active INTEGER,     -- Soft Delete
-    vacation_days INTEGER,
-    user_id INTEGER     -- Link opzionale a User sistema
-);
-
--- Ferie
-CREATE TABLE LeaveRequests ( ... );
-
--- Performance
-CREATE TABLE PerformanceNotes ( ... );
-```
+### Stress Tests (`PersonnelStressTest.java`)
+Testano scenari limite: ferie sovrapposte, eliminazione con turni, nomi duplicati.
 
 ## 5. Istruzioni per Esecuzione
 
@@ -81,6 +72,6 @@ CREATE TABLE PerformanceNotes ( ... );
 # Compilazione e Test Completi
 mvn clean test
 
-# Esecuzione solo Test Integrazione (Scenario Reale)
-mvn test -Dtest=PersonnelIntegrationTest
+# Esecuzione solo Test Stress
+mvn test -Dtest=PersonnelStressTest
 ```
