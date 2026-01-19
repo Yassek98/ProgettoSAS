@@ -66,6 +66,18 @@ public class CatERing {
         System.out.println("- Kitchen Task Manager: " + (app.getKitchenTaskManager() != null ? "OK" : "NOT AVAILABLE"));
         System.out.println("- Shift Manager: " + (app.getShiftManager() != null ? "OK" : "NOT AVAILABLE"));
         System.out.println("- Personnel Manager: " + (app.getPersonnelManager() != null ? "OK" : "NOT AVAILABLE"));
+        
+        // Demo: Carica e mostra i turni disponibili
+        System.out.println("\n===== TURNI DISPONIBILI =====");
+        var shifts = catering.businesslogic.shift.Shift.loadAllShifts();
+        if (shifts.isEmpty()) {
+            System.out.println("Nessun turno presente nel database.");
+        } else {
+            for (var shift : shifts) {
+                System.out.println(shift);
+            }
+        }
+        System.out.println("=============================");
     }
 
     public KitchenTaskManager getKitchenTaskManager() {

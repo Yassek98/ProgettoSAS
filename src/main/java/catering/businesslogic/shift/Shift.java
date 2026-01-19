@@ -73,20 +73,46 @@ public class Shift {
                 try {
                     String dateStr = rs.getString("date");
                     if (dateStr != null && !dateStr.isEmpty()) {
-                        s.date = Date.valueOf(dateStr);
+                        try {
+                            if (dateStr.matches("\\d+")) { // If it's a numeric timestamp
+                                s.date = new Date(Long.parseLong(dateStr));
+                            } else {
+                                s.date = Date.valueOf(dateStr);
+                            }
+                        } catch (Exception e) {
+                            LOGGER.warning("Could not parse date '" + dateStr + "' for shift ID " + s.id);
+                        }
                     }
 
-                    String startTimeStr = rs.getString("start_time");
-                    if (startTimeStr != null && !startTimeStr.isEmpty()) {
-                        s.startTime = Time.valueOf(startTimeStr);
+                    String startStr = rs.getString("start_time");
+                    if (startStr != null && !startStr.isEmpty()) {
+                        try {
+                            if (startStr.matches("\\d+")) {
+                                s.startTime = new Time(Long.parseLong(startStr));
+                            } else {
+                                if (startStr.length() == 5) startStr += ":00";
+                                s.startTime = Time.valueOf(startStr);
+                            }
+                        } catch (Exception e) {
+                            LOGGER.warning("Could not parse start_time '" + startStr + "' for shift ID " + s.id);
+                        }
                     }
 
-                    String endTimeStr = rs.getString("end_time");
-                    if (endTimeStr != null && !endTimeStr.isEmpty()) {
-                        s.endTime = Time.valueOf(endTimeStr);
+                    String endStr = rs.getString("end_time");
+                    if (endStr != null && !endStr.isEmpty()) {
+                        try {
+                            if (endStr.matches("\\d+")) {
+                                s.endTime = new Time(Long.parseLong(endStr));
+                            } else {
+                                if (endStr.length() == 5) endStr += ":00";
+                                s.endTime = Time.valueOf(endStr);
+                            }
+                        } catch (Exception e) {
+                            LOGGER.warning("Could not parse end_time '" + endStr + "' for shift ID " + s.id);
+                        }
                     }
-                } catch (IllegalArgumentException ex) {
-                    LOGGER.log(Level.WARNING, "Error parsing date/time in Shift", ex);
+                } catch (SQLException ex) {
+                    LOGGER.log(Level.WARNING, "SQL Error parsing date/time in Shift for ID " + s.id, ex);
                 }
 
                 s.bookedUsers = loadBookings(s);
@@ -94,13 +120,18 @@ public class Shift {
             }
         });
 
-        // Sort the shifts by date and time
+        // Sort the shifts by date and time, handling nulls
         shiftArrayList.sort((a, b) -> {
+            if (a.getDate() == null || b.getDate() == null) return 0;
+            
             if (a.getDate().before(b.getDate()))
                 return -1;
             else if (a.getDate().after(b.getDate()))
                 return 1;
-            else if (a.getStartTime().before(b.getStartTime()))
+            
+            if (a.getStartTime() == null || b.getStartTime() == null) return 0;
+            
+            if (a.getStartTime().before(b.getStartTime()))
                 return -1;
             else if (a.getStartTime().after(b.getStartTime()))
                 return 1;
@@ -126,22 +157,28 @@ public class Shift {
 
                 // Use safe date/time handling for SQLite
                 try {
-                    String dateStr = rs.getString("date");
-                    if (dateStr != null && !dateStr.isEmpty()) {
-                        s.date = Date.valueOf(dateStr);
+                    Object dateObj = rs.getObject("date");
+                    if (dateObj instanceof String) {
+                        s.date = Date.valueOf((String) dateObj);
+                    } else if (dateObj instanceof Date) {
+                        s.date = (Date) dateObj;
                     }
 
-                    String startTimeStr = rs.getString("start_time");
-                    if (startTimeStr != null && !startTimeStr.isEmpty()) {
-                        s.startTime = Time.valueOf(startTimeStr);
+                    Object startObj = rs.getObject("start_time");
+                    if (startObj instanceof String) {
+                        s.startTime = Time.valueOf((String) startObj);
+                    } else if (startObj instanceof Time) {
+                        s.startTime = (Time) startObj;
                     }
 
-                    String endTimeStr = rs.getString("end_time");
-                    if (endTimeStr != null && !endTimeStr.isEmpty()) {
-                        s.endTime = Time.valueOf(endTimeStr);
+                    Object endObj = rs.getObject("end_time");
+                    if (endObj instanceof String) {
+                        s.endTime = Time.valueOf((String) endObj);
+                    } else if (endObj instanceof Time) {
+                        s.endTime = (Time) endObj;
                     }
                 } catch (IllegalArgumentException ex) {
-                    LOGGER.log(Level.WARNING, "Error parsing date/time in Shift", ex);
+                    LOGGER.log(Level.WARNING, "Error parsing date/time in Shift for ID " + s.id + ": " + ex.getMessage());
                 }
 
                 shiftHolder[0] = s;
@@ -187,9 +224,9 @@ public class Shift {
         String query = "INSERT INTO Shifts (date, start_time, end_time) VALUES (?, ?, ?)";
 
         PersistenceManager.executeUpdate(query,
-                s.date,
-                s.startTime,
-                s.endTime);
+                s.date.toString(),
+                s.startTime.toString(),
+                s.endTime.toString());
 
         s.id = PersistenceManager.getLastId();
 
