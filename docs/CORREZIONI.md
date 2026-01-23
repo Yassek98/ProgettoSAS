@@ -341,5 +341,5 @@ Alla riga 192 compare `gi`a` invece di `già`. Verificare l'encoding UTF-8.
 - [ ] 2.5 Rinomina evaluateLeaveRequest
 - [ ] 3.1 Caption Figure
 - [ ] 3.2 Label Univoche
-- [ ] 3.3 Typo "sufficienti"
-- [ ] 3.4 Encoding "già"
+- [x] 3.3 Typo "sufficienti"
+- [x] 3.4 Encoding "già"
