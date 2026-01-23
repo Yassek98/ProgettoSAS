@@ -338,8 +338,8 @@ Alla riga 192 compare `gi`a` invece di `già`. Verificare l'encoding UTF-8.
 - [ ] 2.2 DSD updateCollaboratorInfo
 - [ ] 2.3 DSD removeCollaborator
 - [ ] 2.4 DCD Collaborator.hasActiveAssignments()
-- [ ] 2.5 Rinomina evaluateLeaveRequest
-- [ ] 3.1 Caption Figure
-- [ ] 3.2 Label Univoche
+- [x] 2.5 Rinomina evaluateLeaveRequest
+- [x] 3.1 Caption Figure
+- [x] 3.2 Label Univoche
 - [x] 3.3 Typo "sufficienti"
 - [x] 3.4 Encoding "già"
