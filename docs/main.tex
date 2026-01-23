@@ -218,6 +218,24 @@ che è stato accettato.\\\hline
 \end{center}
 \vspace{1.5\baselineskip}
 
+\noindent\textbf{\large\color{red} Eccezione 2a.2a - \textbf{Nome duplicato} }
+\begin{center}
+    \renewcommand{\arraystretch}{1.5}
+    \begin{tabular}{|c|>{\raggedright\arraybackslash}p{0.45\textwidth}|>{\raggedright\arraybackslash}p{0.45\textwidth}|}
+        \hline
+        \rowcolor{ForestGreen!40}
+        \textbf{\#} & \multicolumn{1}{|c|}{\textbf{Attore}} & \multicolumn{1}{|c|}{\textbf{Sistema}} \\
+        \hline
+        2a.2a.1& Inserisce nome e contatto di un nuovo collaboratore.&
+        Il sistema rileva che esiste già un collaboratore attivo con lo stesso nome.
+        Segnala l'errore e richiede di usare un nome diverso.\\
+        \hline
+        & \textit{Il caso d'uso ritorna al passo 2a.1}&\\
+        \hline
+    \end{tabular}
+\end{center}
+\newpage
+
 \noindent\textbf{\large\color{red} Eccezione 3a.1a - \textbf{Impossibile eliminare: collaboratore con incarichi futuri} }
 \begin{center}
 \renewcommand{\arraystretch}{1.5}
@@ -234,7 +252,6 @@ selezionata.&   Blocca l'eliminazione. Comunica l'errore e mostra l'elenco degli
 \end{tabular}
 \end{center}
 \vspace{2\baselineskip}
-\newpage
 
 \noindent\textbf{\large\color{red} Eccezione 3b.2a - \textbf{Permessi non sufficienti} }
 \begin{center}
@@ -288,6 +305,24 @@ di ferie richiesto.&   Non può eseguire l'azione perchè il monte ferie non cop
 \end{tabular}
 \end{center}
 \vspace{1.5\baselineskip}
+
+\noindent\textbf{\large\color{red} Eccezione 3c.3c - \textbf{Ferie sovrapposte} }
+\begin{center}
+    \renewcommand{\arraystretch}{1.5}
+    \begin{tabular}{|c|>{\raggedright\arraybackslash}p{0.45\textwidth}|>{\raggedright\arraybackslash}p{0.45\textwidth}|}
+        \hline
+        \rowcolor{ForestGreen!40}
+        \textbf{\#} & \multicolumn{1}{|c|}{\textbf{Attore}} & \multicolumn{1}{|c|}{\textbf{Sistema}} \\
+        \hline
+        3c.3c.1& Approva la richiesta di ferie.&
+        Il sistema rileva che il periodo richiesto si sovrappone a ferie già approvate per lo stesso collaboratore.
+        Blocca l'approvazione e segnala il conflitto.\\
+        \hline
+        & \textit{Termina il caso d'uso}&\\
+        \hline
+    \end{tabular}
+\end{center}
+
 \newpage
 
 \subsection{\textbf{Modello di Dominio}}
@@ -337,7 +372,7 @@ di ferie richiesto.&   Non può eseguire l'azione perchè il monte ferie non cop
     \centering
     % Questi valori potrebbero necessitare di aggiustamenti per adattarsi alla tua pagina
     \hspace*{-1cm} 
-    \includegraphics[width=1\linewidth, keepaspectratio]{input_file_2.png}
+    \includegraphics[width=0.8\linewidth, keepaspectratio]{input_file_2.png}
     \caption{Diagramma di Sequenza: Flusso di Aggiunta di un Nuovo Collaboratore \\
     (Estensione 2a).}
     \label{fig:ssd-aggiunta}
@@ -351,7 +386,7 @@ di ferie richiesto.&   Non può eseguire l'azione perchè il monte ferie non cop
     \centering
     % Rimuovi completamente \hspace* per evitare problemi di allineamento
     % Usiamo \textwidth che è la larghezza effettiva della pagina (escludendo i margini).
-    \includegraphics[width=0.73\textwidth]{input_file_1.png}
+    \includegraphics[width=0.7\textwidth]{input_file_1.png}
     \caption{Diagramma di Sequenza: Azioni Avanzate sul Collaboratore (Estensioni 3a, 3b, 3c).}
     \label{fig:ssd-avanzate}
 \end{figure}
@@ -462,8 +497,9 @@ Queste operazioni recuperano dati senza modificare lo stato del sistema e, perta
     \textbf{Pre-condizioni:}
     \begin{itemize}[leftmargin=*,noitemsep,topsep=-5pt]
         \item[-] è in corso la visualizzazione del profilo di \texttt{\textit{collab}}
-        \item[-] non esiste un'istanza \texttt{\textit{t}} di \texttt{Turno} tale che \texttt{\textit{collab}} è \textbf{disponibile per} \texttt{\textit{t}} e \\ \texttt{t.data > data\_corrente}
-    \end{itemize}
+        \item[-] non esiste un'istanza \texttt{\textit{a}} di \texttt{CollaboratorAvailability} tale che
+        \texttt{\textit{a}.collaborator = \textit{collab}} e
+        \texttt{\textit{a}.confirmed = 'si'} e \texttt{\textit{a}.shift.data $>$ data\_corrente}    \end{itemize}
     \textbf{Post-condizioni:}
     \begin{itemize}[leftmargin=*,noitemsep,topsep=-5pt]
         \item[-] \texttt{\textit{collab}.attivo = 'no'}
@@ -495,8 +531,11 @@ Queste operazioni recuperano dati senza modificare lo stato del sistema e, perta
         \item[-] \texttt{\textit{rich}.approvata = \underline{approvata}}
         \item[-] [se \underline{approvata} = 'si']
         \begin{itemize}
-            \item[-] \texttt{\textit{collab}.inFerie = 'si'}
-            \item[-] \texttt{\textit{collab}.monteFerie = \textit{collab}.monteFerie@pre - (\textit{rich}.dataFine - \textit{rich}.dataInizio)}
+            \item[-] \texttt{\textit{rich}.approvata = 'si'} (il periodo è confermato)
+            \item[-] Per ogni data \texttt{d} tale che
+            \texttt{\textit{rich}.dataInizio $\leq$ d $\leq$ \textit{rich}.dataFine}:
+            \texttt{\textit{collab}} risulta \textbf{in ferie} nella data \texttt{d}.
+            \item[-] \texttt{\textit{collab}.monteFerie = \textit{collab}.monteFerie - durata}
         \end{itemize}
     \end{itemize}
 \end{enumerate}

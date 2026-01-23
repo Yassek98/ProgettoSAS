@@ -330,13 +330,13 @@ Alla riga 192 compare `gi`a` invece di `già`. Verificare l'encoding UTF-8.
 
 ## ✅ Stato Attuale (Da Aggiornare Dopo le Modifiche)
 
-- [ ] 1.1 Contratto eliminaCollaboratore
-- [ ] 1.2 Contratto aggiornaStatoFerie
-- [ ] 1.3 Eccezione Nome Duplicato
-- [ ] 1.4 Eccezione Ferie Sovrapposte
-- [ ] 2.1 DSD logPerformance
-- [ ] 2.2 DSD updateCollaboratorInfo
-- [ ] 2.3 DSD removeCollaborator
+- [x] 1.1 Contratto eliminaCollaboratore
+- [x] 1.2 Contratto aggiornaStatoFerie
+- [x] 1.3 Eccezione Nome Duplicato
+- [x] 1.4 Eccezione Ferie Sovrapposte
+- [x] 2.1 DSD logPerformance
+- [x] 2.2 DSD updateCollaboratorInfo
+- [x] 2.3 DSD removeCollaborator
 - [ ] 2.4 DCD Collaborator.hasActiveAssignments()
 - [x] 2.5 Rinomina evaluateLeaveRequest
 - [x] 3.1 Caption Figure
