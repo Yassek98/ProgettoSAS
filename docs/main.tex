@@ -8,6 +8,9 @@
 \usepackage[table]{xcolor}
 \usepackage[svgnames]{xcolor} % Nel preambolo
 \usepackage{array}
+\makeatletter
+\newcommand{\arraybackslash}{\let\\=\@arraycr}
+\makeatother
 \usepackage{float} % Per [H] che forza la posizione
 \usepackage{rotating} % Necessario per l'ambiente sidewaysfigure
 \usepackage[utf8]{inputenc}
@@ -75,15 +78,16 @@ Gestire il personale significa inserire i dati dei lavoratori e eventualmente mo
 \begin{enumerate}
     \item Consulta l'elenco del personale\footnote{Unisce le azioni iniziali di entrambi gli organizzatori.}.
 
-    \item  Seleziona un membro del personale
-    \item \textbf{OPZIONALMENTE} decide di modificare le informazioni della persona selezionata, \textbf{OPPURE} decide di eliminare la persona dall'elenco del personale, in caso non sia più disponibile.\\
-    \textbf{OPPURE} Aggiunge una nuova persona all'elenco\footnote{Solo il proprietario può eseguire questa azione}, inserendo le informazioni preliminari (nome, contatto).\\ 
-    \textbf{OPPURE ANCORA} consulta lo storico degli eventi e le note sulle performance per valutarne l'operato.\\
-\textit{Se decide di promuovere il membro selezionato prosegue col passo 4, altrimenti termina il caso d'uso.}\\
-\textbf{OPPURE ANCORA}\footnote{Azione eseguibile solo dal proprietario, per gestire una richiesta di ferie} valuta la richiesta di ferie  incrociando il monte ferie residuo con gli eventi pianificati. \\
-\textit{Se decide di accettare la richiesta di ferie prosegue col passo 5, se no termina il caso d'uso}
-        \item Modifica lo stato del personale selezionato da "occasionale" a "permanente"\footnote{Azione eseguibile solo dal proprietario, consultando gli organizzatori interessati, per gestire la carriera di un collaboratore}.
-        \item Modifica lo stato del personale selezionato da "Disponibile" a "In ferie" per il periodo di ferie richiesto.
+    \item Seleziona un membro del personale dall'elenco.\\
+    \textbf{OPPURE} Aggiunge una nuova persona all'elenco\footnote{Solo il proprietario può eseguire questa azione.}, inserendo le informazioni preliminari (nome, contatto).\\
+    \textit{Se aggiunge una nuova persona, termina il caso d'uso.}
+    
+    \item \textbf{OPZIONALMENTE} decide di modificare le informazioni della persona selezionata (es. dati di contatto, indirizzo, codice fiscale al primo ingaggio). \textit{Termina il caso d'uso.}\\[2mm]
+    \textbf{OPPURE} decide di eliminare la persona dall'elenco del personale, in caso non sia più disponibile\footnote{Il sistema imposta lo stato a 'inattivo' invece di cancellare fisicamente.}. \textit{Termina il caso d'uso.}\\[2mm]
+    \textbf{OPPURE} consulta lo storico degli eventi e le note sulle performance per valutarne l'operato.\\
+    \textit{Se decide di promuovere il membro selezionato da ''occasionale'' a ''permanente''\footnote{Azione eseguibile solo dal proprietario, consultando gli organizzatori interessati.}, esegue la promozione. Termina il caso d'uso.}\\[2mm]
+    \textbf{OPPURE}\footnote{Azione eseguibile solo dal proprietario.} valuta la richiesta di ferie incrociando il monte ferie residuo con gli eventi pianificati.\\
+    \textit{Se decide di accettare la richiesta di ferie, modifica lo stato del personale selezionato da ''Disponibile'' a ''In ferie'' per il periodo richiesto. Termina il caso d'uso.}
 \end{enumerate}
 \vspace{2\baselineskip}
 
@@ -218,7 +222,7 @@ che è stato accettato.\\\hline
 \end{center}
 \vspace{1.5\baselineskip}
 
-\noindent\textbf{\large\color{red} Eccezione 2a.2a - \textbf{Nome duplicato} }
+\noindent\textbf{\large\color{red} Eccezione 2a.2a - \textbf{Contatto duplicato} }
 \begin{center}
     \renewcommand{\arraystretch}{1.5}
     \begin{tabular}{|c|>{\raggedright\arraybackslash}p{0.45\textwidth}|>{\raggedright\arraybackslash}p{0.45\textwidth}|}
@@ -227,8 +231,8 @@ che è stato accettato.\\\hline
         \textbf{\#} & \multicolumn{1}{|c|}{\textbf{Attore}} & \multicolumn{1}{|c|}{\textbf{Sistema}} \\
         \hline
         2a.2a.1& Inserisce nome e contatto di un nuovo collaboratore.&
-        Il sistema rileva che esiste già un collaboratore attivo con lo stesso nome.
-        Segnala l'errore e richiede di usare un nome diverso.\\
+        Il sistema rileva che esiste già un collaboratore attivo con lo stesso contatto (numero di telefono).
+        Segnala l'errore e richiede di usare un contatto diverso.\\
         \hline
         & \textit{Il caso d'uso ritorna al passo 2a.1}&\\
         \hline
@@ -463,9 +467,10 @@ Queste operazioni recuperano dati senza modificare lo stato del sistema e, perta
     \end{itemize}
     \textbf{Post-condizioni:}
     \begin{itemize}[leftmargin=*,noitemsep,topsep=-5pt]
-        \item[-] È stata creata un'istanza \texttt{\textit{collab}} di \texttt{Collaboratore}
+        \item[-] È stata creata un'istanza \texttt{\textit{collab}} di \texttt{Collaboratore} (in memoria, non ancora persistita)
         \item[-] È in corso l'aggiunta del nuovo \texttt{Collaboratore} \texttt{\textit{collab}}
     \end{itemize}
+    \textit{Nota: la persistenza avviene solo dopo la conferma tramite \texttt{aggiungiCollaboratore()}.}
 
     \item[2a.2] {\fontseries{b}\selectfont\large aggiungiCollaboratore(\underline{nome}: testo, \underline{contatto}: numero)}\\
     \textbf{Pre-condizioni:}

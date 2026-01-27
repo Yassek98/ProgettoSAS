@@ -59,13 +59,16 @@ public class Collaborator {
      * - collab.occasionale = 'si'
      * - collab.attivo = 'si'
      * 
-     * @throws PersonnelException se esiste già un collaboratore attivo con lo stesso nome
+     * @throws PersonnelException se esiste già un collaboratore attivo con lo stesso contatto
      */
     public static Collaborator create(String name, String contact) throws PersonnelException {
         // Fix 3. Controllo duplicati attivi
         final boolean[] duplicateFound = {false};
-        String query = "SELECT COUNT(*) as cnt FROM Collaborators WHERE name = '" + escape(name) + "' AND active = 1";
+        String query = "SELECT COUNT(*) as cnt FROM Collaborators WHERE contact = '" + escape(contact) + "' AND active = 1";
         PersistenceManager.executeQuery(query, new ResultHandler() {
+            // qui controlliamo se esiste già un collaboratore attivo con lo stesso nome. il modo usato è questo:
+            // - ResultHandler: conta quanti risultati ci sono
+            // - duplicateFound: se esiste almeno un risultato, duplicateFound[0] = true
             @Override
             public void handle(ResultSet rs) throws SQLException {
                 duplicateFound[0] = rs.getInt("cnt") > 0;
@@ -73,7 +76,7 @@ public class Collaborator {
         });
 
         if (duplicateFound[0]) {
-            throw new PersonnelException("Esiste già un collaboratore attivo con nome: " + name);
+            throw new PersonnelException("Esiste già un collaboratore attivo con questo contatto: " + contact);
         }
 
         Collaborator c = new Collaborator();
@@ -130,6 +133,25 @@ public class Collaborator {
      */
     public void promote() {
         this.occasional = false;
+    }
+    
+    /**
+     * Crea e aggiunge una nota sulle performance per questo collaboratore.
+     * 
+     * Allineato al DSD logPerformance.png:
+     * - collab.addPerformanceNote(text, event, author) → newNote
+     * 
+     * Il Collaborator è "esperto" dei propri dati e crea la nota internamente.
+     * 
+     * @param text Testo della valutazione
+     * @param event Evento a cui si riferisce (può essere null)
+     * @param author Utente che scrive la nota (Organizzatore)
+     * @return La nota creata
+     */
+    public PerformanceNote addPerformanceNote(String text, catering.businesslogic.event.Event event, 
+                                               catering.businesslogic.user.User author) {
+        PerformanceNote note = PerformanceNote.create(this, event, author, text);
+        return note;
     }
     
     /**

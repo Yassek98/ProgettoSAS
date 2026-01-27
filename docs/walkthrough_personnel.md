@@ -1,77 +1,189 @@
-# 📋 Gestione Personale - Walkthrough Tecnico
+# 📋 Gestione Personale - Walkthrough Completo per Esame
 
-> **Stato**: Completato (27 Test Totali: Unit, Integration, Stress)
-> **Ultimo aggiornamento**: 2026-01-18
+> **Stato**: Completato (17 Unit Test ✅)  
+> **Ultimo aggiornamento**: 27 Gennaio 2026
 
-Questo documento descrive l'implementazione tecnica del modulo **Gestione del Personale** (UC d'esame).
+Questo documento è la guida completa per spiegare ogni scelta implementativa del modulo **Gestione del Personale** all'esame.
 
-## 1. Mappatura File Implementati
+---
 
-| Componente | File Sorgente (`src/main/java/...`) | Ruolo |
-|------------|-----------------------------------|-------|
-| **Entity** | `catering.businesslogic.personnel.Collaborator` | Mappa entità `Collaboratore` |
-| **Entity** | `catering.businesslogic.personnel.LeaveRequest` | Mappa entità `RichiestaFerie` |
-| **Entity** | `catering.businesslogic.personnel.PerformanceNote` | Mappa entità `Performance` |
-| **Controller**| `catering.businesslogic.personnel.PersonnelManager` | Logica applicativa e security |
-| **Persistence**| `catering.persistence.PersonnelPersistence` | Connessione al DB (Observer pattern) |
-| **Security** | `catering.businesslogic.user.User` | Aggiunto ruolo `PROPRIETARIO` (id=4) |
+## 🎯 1. Mappatura Requisiti → Contratti → Codice
 
-## 2. Validazioni Logiche Implementate
+### Da UCEsame.txt a main.tex
 
-### 🛡️ Controllo Nomi Duplicati
-`Collaborator.create()` impedisce la creazione di collaboratori con nome identico a uno già attivo.
+| Intervista (UCEsame.txt) | Operazione (main.tex) | Metodo Java |
+|--------------------------|----------------------|-------------|
+| Robert: "mi segno il nome e il contatto" | `aggiungiCollaboratore` | `PersonnelManager.addCollaborator()` |
+| Robert: "per il contratto ho bisogno di indirizzo e CF" | `modificaInfoProfilo` | `PersonnelManager.updateCollaboratorInfo()` |
+| Raffaele: "lo cancello dall'elenco" | `eliminaCollaboratore` | `PersonnelManager.removeCollaborator()` |
+| Robert: "offrire un posto permanente" | `promuoviCollaboratore` | `PersonnelManager.promoteCollaborator()` |
+| Robert: "devo decidere se (ferie) accettate" | `valutaRichiestaFerie` | `PersonnelManager.evaluateLeaveRequest()` |
+| Raffaele: "dopo ogni evento mi faccio delle note" | `aggiornaStoricoPerformance` | `PersonnelManager.logPerformance()` |
 
-### 📅 Controllo Ferie Sovrapposte
-`LeaveRequest.save()` impedisce il salvataggio di richieste che si sovrappongono a ferie già approvate.
+---
 
-### 🔒 Controllo Turni Futuri
-`Collaborator.deactivate()` impedisce la disattivazione se il collaboratore ha turni futuri confermati in `CollaboratorAvailability`.
+## 🔐 2. Permessi - Chi Può Fare Cosa
 
-## 3. Architettura & Design Patterns
+Derivati direttamente dalle interviste:
 
-### Pattern Controller & Observer
-Come per gli altri moduli (Menu, Event), abbiamo usato un Manager che fa da Subject per la persistenza:
-```mermaid
-classDiagram
-    class PersonnelManager {
-        +addCollaborator()
-        +promoteCollaborator()
-        +addEventReceiver()
-    }
-    class PersonnelEventReceiver {
-        <<interface>>
-        +updateCollaboratorAdded()
-    }
-    class PersonnelPersistence {
-        +updateCollaboratorAdded()
-    }
-    PersonnelManager --> PersonnelEventReceiver : notifies
-    PersonnelPersistence ..|> PersonnelEventReceiver : implements
+| Azione | Robert (Owner) | Raffaele (Organizer) | Fonte |
+|--------|---------------|---------------------|-------|
+| Aggiungere collaboratori | ✅ | ❌ | "mi segno il nome" |
+| Modificare info | ✅ | ✅ | "aggiorno i dettagli" |
+| Eliminare | ❌ | ✅ | "lo cancello dall'elenco" |
+| Promuovere | ✅ | ❌ | "solo dal proprietario" |
+| Approvare ferie | ✅ | ❌ | "devo decidere" |
+| Loggare performance | ✅ | ✅ | "mi faccio delle note" |
+
+### Implementazione nel codice:
+```java
+// PersonnelManager.java
+private boolean isOwner(User u) { return u != null && u.isOwner(); }
+private boolean isOrganizer(User u) { return u != null && u.isOrganizer(); }
 ```
 
-### Pattern Security (Role-Based)
-I permessi sono verificati programmaticamente dentro `PersonnelManager`:
-- **Owner (Giovanni)**: Può aggiungere, promuovere, approvare ferie.
-- **Organizer (Tutti)**: Possono modificare info, loggare performance, rimuovere (soft-delete).
-- **Cook/Staff**: Nessun accesso in scrittura.
+---
 
-## 4. Guida ai Test
+## 📂 3. Mappatura File Implementati
 
-### Unit Tests (`PersonnelTest.java`)
-Testano la logica pura con DB in-memory.
+| Componente | File | Ruolo |
+|------------|------|-------|
+| **Entity** | `Collaborator.java` | Mappa entità Collaboratore (nome, contatto, occasionale, attivo) |
+| **Entity** | `LeaveRequest.java` | Mappa entità RichiestaFerie (start, end, approved) |
+| **Entity** | `PerformanceNote.java` | Mappa entità NotaPerformance (collab, event, text, date) |
+| **Controller** | `PersonnelManager.java` | Logica applicativa + controllo permessi |
+| **Persistence** | `PersonnelPersistence.java` | Observer per salvataggio DB |
+| **Interface** | `PersonnelEventReceiver.java` | Interfaccia Observer |
 
-### Integration Tests (`PersonnelIntegrationTest.java`)
-Eseguono un login simulato (`fakeLogin`) per testare le eccezioni di sicurezza.
+---
 
-### Stress Tests (`PersonnelStressTest.java`)
-Testano scenari limite: ferie sovrapposte, eliminazione con turni, nomi duplicati.
+## 🏗️ 4. Pattern Architetturali
 
-## 5. Istruzioni per Esecuzione
+### Pattern Observer (Persistenza)
+```
+PersonnelManager → notifyXXX() → PersonnelEventReceiver → PersonnelPersistence.updateXXX()
+```
+
+**Perché?** Separa la logica di business dalla persistenza. Il Manager non sa *come* si salva, solo *quando*.
+
+### Pattern Expert (logPerformance)
+```java
+// Il Collaborator è "esperto" dei propri dati
+PerformanceNote note = collab.addPerformanceNote(text, event, author);
+```
+
+**Motivazione DSD**: Nel DSD logPerformance.png, la freccia va al Collaborator che crea la nota. È l'esperto delle proprie informazioni.
+
+### Pattern Inizio-Conferma (addCollaborator)
+1. `iniziaAggiuntaCollaboratore()` → crea istanza in memoria
+2. `aggiungiCollaboratore()` → conferma e persiste
+
+**Perché?** Permette controlli anticipati (permessi) prima dell'input utente.
+
+---
+
+## ⚠️ 5. Eccezioni e Business Rules
+
+### Eccezione 2a.2a - Contatto Duplicato
+```java
+// Collaborator.create()
+if (duplicateFound[0]) {
+    throw new PersonnelException("Esiste già un collaboratore attivo con questo contatto");
+}
+```
+**Nota**: Solo contatti ATTIVI contano. Contatti inattivi possono essere riutilizzati.
+
+### Eccezione 3a.1a - Turni Futuri
+```java
+// Collaborator.deactivate()
+if (hasActiveAssignments()) {
+    throw new PersonnelException("Impossibile eliminare");
+}
+```
+
+### Business Rule - Monte Ferie
+```java
+// PersonnelManager.evaluateLeaveRequest()
+if (collab.getVacationDays() < duration) {
+    throw new PersonnelException("Monte ferie insufficiente");
+}
+collab.reduceVacationDays(duration);
+```
+
+---
+
+## 🔄 6. Ciclo di Vita Collaboratore
+
+```
+NUOVO → occasionale=true, attivo=true
+  │
+  ├─ promote() → occasionale=false (permanente)
+  │
+  └─ deactivate() → attivo=false (soft delete)
+```
+
+**Soft Delete**: I dati rimangono nel DB per storico, ma `loadActive()` non li restituisce.
+
+---
+
+## 🧪 7. Test Implementati (17 totali)
+
+| Categoria | Test | Verifica |
+|-----------|------|----------|
+| Creazione | `testNewCollaboratorIsOccasional` | Nuovo = occasionale |
+| Update | `testCanUpdateCollaboratorInfo` | Modifica funziona |
+| Promozione | `testPromoteOccasionalToPermanent` | promote() cambia stato |
+| Eliminazione | `testDeactivatedCollaboratorIsInactive` | Soft delete |
+| Ferie | `testApproveLeaveRequest` | Approvazione scala monte |
+| Ferie | `testInsufficientVacationDays` | Exception se insufficiente |
+| Note | `testAddPerformanceNoteViaDSD` | Pattern Expert funziona |
+| Duplicati | `testDuplicateContactThrowsException` | Eccezione 2a.2a |
+| Duplicati | `testInactiveContactCanBeReused` | Riuso contatto inattivo OK |
+
+---
+
+## ⚡ 8. Lavori del 27 Gennaio 2026
+
+### Modifiche Codice
+1. **Collaborator.java**: Aggiunto `addPerformanceNote()` per allineamento DSD
+2. **PersonnelManager.java**: Usa ora `collab.addPerformanceNote()` invece di `PerformanceNote.create()`
+3. **main.tex**: Chiarita post-condizione `iniziaAggiuntaCollaboratore()` (in memoria)
+
+### DSD da Correggere
+- [ ] `addCollaborator.png`: Manca eccezione contatto duplicato
+- [ ] `removeCollaborator.png`: Cambiare `isOwner` → `isOrganizer`
+- [ ] `DCD definitivo.jpg`: Aggiungere `addPerformanceNote()` a Collaborator
+
+---
+
+## 🎓 9. Domande Tipiche Esame
+
+**D: Perché il Collaborator crea la PerformanceNote?**
+> Pattern Expert: il Collaborator è "esperto" dei propri dati. Ha tutte le info per creare la nota.
+
+**D: Chi può eliminare collaboratori?**
+> Gli Organizzatori (Raffaele: "lo cancello dall'elenco"), non solo il Proprietario.
+
+**D: Cosa succede se creo un collaboratore con contatto duplicato?**
+> Exception 2a.2a. Ma se il collaboratore precedente è inattivo, il contatto può essere riusato.
+
+**D: Perché il pattern Inizio-Conferma?**
+> Permette controllo permessi PRIMA dell'input, evitando che l'utente compili form invano.
+
+**D: Come funziona la persistenza?**
+> Pattern Observer: PersonnelManager chiama notifyXXX(), PersonnelPersistence riceve e salva.
+
+---
+
+## 📝 10. Esecuzione Test
 
 ```bash
-# Compilazione e Test Completi
-mvn clean test
+# Tutti i test Personnel
+mvn test -Dtest=PersonnelTest
 
-# Esecuzione solo Test Stress
-mvn test -Dtest=PersonnelStressTest
+# Compilazione
+mvn compile
+
+# Tutto
+mvn clean test
 ```
