@@ -70,6 +70,7 @@ public class PersonnelManager {
         }
     }
     
+    // ==================== GESTIONE NOTIFICHE ====================
     private void notifyPerformanceLogged(Collaborator collab, PerformanceNote note) {
         for (PersonnelEventReceiver rec : eventReceivers) {
             rec.updatePerformanceLogged(collab, note);
@@ -305,35 +306,40 @@ public class PersonnelManager {
     }
     
     /**
-     * Registra una nota sulle performance (DSD logPerformance).
-     * 
-     * Secondo le interviste e CORREZIONI.md:
-     * - Tutti gli Organizzatori possono loggare performance
-     * - (Raffaele: "dopo ogni evento mi faccio delle note")
-     * 
-     * @param collab Collaboratore a cui si riferisce
-     * @param event Evento opzionale
-     * @param text Testo della nota
-     * @return La nota creata
-     * @throws UseCaseLogicException se non è Organizzatore
-     */
-    public PerformanceNote logPerformance(Collaborator collab, Event event, String text) 
-            throws UseCaseLogicException {
-        User currentUser = CatERing.getInstance().getUserManager().getCurrentUser();
-        
-        // Verifica permessi: tutti gli Organizzatori (CORREZIONI.md)
-        if (!isOrganizer(currentUser)) {
-            throw new UseCaseLogicException("Permessi insufficienti: solo gli Organizzatori possono loggare performance");
-        }
-        
-        // Crea la nota
-        PerformanceNote note = PerformanceNote.create(collab, event, currentUser, text);
-        
-        // Notifica per la persistenza
-        notifyPerformanceLogged(collab, note);
-        
-        return note;
+ * Registra una nota sulle performance (DSD logPerformance).
+ * 
+ * Allineato al DSD logPerformance.png:
+ * - collab.addPerformanceNote(text, event, author) → newNote
+ * - notifyPerformanceLogged(collab, newNote)
+ * 
+ * Secondo le interviste:
+ * - Tutti gli Organizzatori possono loggare performance
+ * - (Raffaele: "dopo ogni evento mi faccio delle note")
+ * 
+ * @param collab Collaboratore a cui si riferisce
+ * @param event Evento opzionale
+ * @param text Testo della nota
+ * @return La nota creata
+ * @throws UseCaseLogicException se non è Organizzatore
+ */
+public PerformanceNote logPerformance(Collaborator collab, Event event, String text) 
+        throws UseCaseLogicException {
+    User currentUser = CatERing.getInstance().getUserManager().getCurrentUser();
+    
+    // Verifica permessi: tutti gli Organizzatori possono loggare performance
+    if (!isOrganizer(currentUser)) {
+        throw new UseCaseLogicException("Permessi insufficienti: solo gli Organizzatori possono loggare performance");
     }
+    
+    // Crea la nota tramite il Collaborator (allineato al DSD)
+    // Il Collaborator è "esperto" dei propri dati
+    PerformanceNote note = collab.addPerformanceNote(text, event, currentUser);
+    
+    // Notifica per la persistenza
+    notifyPerformanceLogged(collab, note);
+    
+    return note;
+}
     
     // ==================== HELPER PERMESSI ====================
     

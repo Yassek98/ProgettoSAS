@@ -35,7 +35,7 @@ public class PersonnelStressTest {
             // Scenario: Un collaboratore ha ferie approvate per 1-10 Gennaio.
             // Chiede ferie per 5-15 Gennaio. Il sistema dovrebbe gestirlo (rifiutare o unire?).
             
-            Collaborator collab = Collaborator.create("Overlap Test", "111");
+            Collaborator collab = Collaborator.create("Overlap Test " + System.currentTimeMillis(), "111" + System.currentTimeMillis());
             collab.promote();
             collab.setVacationDays(30);
             collab.save();
@@ -71,7 +71,7 @@ public class PersonnelStressTest {
         @DisplayName("CRITICAL: Impossibile eliminare collaboratore con turni futuri")
         void testCannotDeleteActiveCollaborator() throws PersonnelException {
             // 1. Creiamo un collaboratore
-            Collaborator collab = Collaborator.create("Busy Worker", "222");
+            Collaborator collab = Collaborator.create("Busy Worker " + System.currentTimeMillis(), "222" + System.currentTimeMillis());
             collab.save(); // ID assegnato
             
             // 2. Simuliamo un incarico futuro (CollaboratorAvailability)
@@ -110,24 +110,24 @@ public class PersonnelStressTest {
     class DataIntegrityTest {
         
         @Test
-        @DisplayName("STRESS: Duplicate Names Denied")
-        void testDuplicateNameDenied() throws PersonnelException {
-            // Cosa succede se creo un collaboratore con lo stesso nome di uno eliminato?
-            Collaborator c1 = Collaborator.create("Unique Name", "000");
+        @DisplayName("STRESS: Duplicate Contacts Denied")
+        void testDuplicateContactDenied() throws PersonnelException {
+            // Cosa succede se creo un collaboratore con lo stesso contatto di uno eliminato?
+            Collaborator c1 = Collaborator.create("Mario Rossi", "+39 555 0001");
             c1.save();
             
-            // Tentativo di creare un secondo collaboratore attivo con lo stesso nome
+            // Tentativo di creare un secondo collaboratore attivo con lo stesso contatto
             assertThrows(PersonnelException.class, () -> {
-                Collaborator.create("Unique Name", "111");
-            }, "Il sistema deve impedire la creazione di omonimi attivi");
+                Collaborator.create("Luigi Bianchi", "+39 555 0001");
+            }, "Il sistema deve impedire la creazione di collaboratori con lo stesso contatto");
             
             // Ma se disattivo il primo?
             c1.deactivate();
             c1.update();
             assertFalse(c1.isActive());
             
-            // Ora dovrei poter creare un nuovo "Unique Name"
-            Collaborator c2 = Collaborator.create("Unique Name", "111");
+            // Ora dovrei poter creare un nuovo collaboratore con lo stesso contatto
+            Collaborator c2 = Collaborator.create("Paolo Verdi", "+39 555 0001");
             c2.save();
             assertNotNull(c2);
         }

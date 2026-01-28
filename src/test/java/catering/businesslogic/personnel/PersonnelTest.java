@@ -65,7 +65,7 @@ public class PersonnelTest {
         void testNewCollaboratorIsOccasional() throws PersonnelException {
             // REQUISITO: Robert dice che i nuovi arrivati sono sempre occasionali
             String uniqueName = "Mario Rossi " + System.currentTimeMillis();
-            Collaborator collab = Collaborator.create(uniqueName, "+39 333 1234567");
+            Collaborator collab = Collaborator.create(uniqueName, "+39 333 " + System.currentTimeMillis());
             
             assertTrue(collab.isOccasional(), 
                 "Un nuovo collaboratore DEVE essere occasionale di default");
@@ -81,7 +81,7 @@ public class PersonnelTest {
         void testCanUpdateCollaboratorInfo() throws PersonnelException {
             // REQUISITO: Raffaele aggiorna telefoni e altri dettagli
             String uniqueName = "Test Update " + System.currentTimeMillis();
-            Collaborator collab = Collaborator.create(uniqueName, "+39 111");
+            Collaborator collab = Collaborator.create(uniqueName, "+39 111 " + System.currentTimeMillis());
             
             collab.updateInfo("Test Update Nuovo", "NEWCF123", "+39 222", "Via Nuova 1");
             
@@ -102,7 +102,7 @@ public class PersonnelTest {
         @DisplayName("Promuovere un occasionale lo rende permanente")
         void testPromoteOccasionalToPermanent() throws PersonnelException {
             String uniqueName = "Luigi Verdi " + System.currentTimeMillis();
-            Collaborator c = Collaborator.create(uniqueName, "+39 987654321");
+            Collaborator c = Collaborator.create(uniqueName, "+39 987 " + System.currentTimeMillis());
             assertTrue(c.isOccasional());
 
             c.promote();
@@ -114,7 +114,7 @@ public class PersonnelTest {
         @DisplayName("Promuovere un permanente non cambia nulla")
         void testAlreadyPermanentDoesntChange() throws PersonnelException {
             String uniqueName = "Giulia Bianchi " + System.currentTimeMillis();
-            Collaborator c = Collaborator.create(uniqueName, "+39 111222333");
+            Collaborator c = Collaborator.create(uniqueName, "+39 112 " + System.currentTimeMillis());
             c.promote(); // Ora è permanente
             assertFalse(c.isOccasional());
 
@@ -130,7 +130,7 @@ public class PersonnelTest {
         @Test
         @DisplayName("Un collaboratore disattivato non compare più nella lista attivi")
         void testDeactivatedCollaboratorIsInactive() throws PersonnelException {
-            Collaborator collab = Collaborator.create("Da Eliminare", "+39 777");
+            Collaborator collab = Collaborator.create("Da Eliminare " + System.currentTimeMillis(), "+39 777 " + System.currentTimeMillis());
             assertTrue(collab.isActive(), "Inizialmente attivo");
 
             collab.deactivate();
@@ -142,11 +142,12 @@ public class PersonnelTest {
         @Test
         @DisplayName("Soft Delete: i dati personali rimangono dopo la disattivazione")
         void testSoftDeletePreservesData() throws PersonnelException {
-            Collaborator collab = Collaborator.create("Soft Delete", "+39 888");
+            long ts = System.currentTimeMillis();
+            Collaborator collab = Collaborator.create("Soft Delete " + ts, "+39 888 " + ts);
             collab.deactivate();
 
-            assertEquals("Soft Delete", collab.getName());
-            assertEquals("+39 888", collab.getContact());
+            assertEquals("Soft Delete " + ts, collab.getName());
+            assertEquals("+39 888 " + ts, collab.getContact());
         }
     }
     
@@ -158,7 +159,7 @@ public class PersonnelTest {
         @DisplayName("Creazione richiesta ferie pending")
         void testCreateLeaveRequest() throws PersonnelException {
             String uniqueName = "Ferie Man " + System.currentTimeMillis();
-            Collaborator c = Collaborator.create(uniqueName, "000");
+            Collaborator c = Collaborator.create(uniqueName, "+39 000 " + System.currentTimeMillis());
             Date start = new Date();
             Date end = new Date(start.getTime() + 86400000); // +1 giorno
             
@@ -172,7 +173,7 @@ public class PersonnelTest {
         @DisplayName("Approvazione richiesta scala monte ferie")
         void testApproveLeaveRequest() throws PersonnelException {
             String uniqueName = "Vacationer " + System.currentTimeMillis();
-            Collaborator c = Collaborator.create(uniqueName, "111");
+            Collaborator c = Collaborator.create(uniqueName, "+39 111A " + System.currentTimeMillis());
             c.setVacationDays(10);
             
             Date start = new Date();
@@ -193,7 +194,7 @@ public class PersonnelTest {
         @DisplayName("Business rule: non si possono approvare più ferie del monte disponibile")
         void testInsufficientVacationDays() throws PersonnelException {
             String uniqueName = "Poche Ferie " + System.currentTimeMillis();
-            Collaborator collab = Collaborator.create(uniqueName, "+39 103");
+            Collaborator collab = Collaborator.create(uniqueName, "+39 103 " + System.currentTimeMillis());
             collab.promote();
             collab.setVacationDays(3); // solo 3 giorni
             
@@ -206,7 +207,7 @@ public class PersonnelTest {
         @DisplayName("Una richiesta può essere rifiutata")
         void testLeaveRequestCanBeRejected() throws PersonnelException {
             String uniqueName = "Rifiutato " + System.currentTimeMillis();
-            Collaborator collab = Collaborator.create(uniqueName, "+39 104");
+            Collaborator collab = Collaborator.create(uniqueName, "+39 104 " + System.currentTimeMillis());
             Date start = new Date();
             Date end = new Date(start.getTime() + 2 * 24 * 60 * 60 * 1000L);
             
@@ -232,7 +233,7 @@ public class PersonnelTest {
         void testCreateNote() throws PersonnelException {
             // REQUISITO: Raffaele registra note dopo gli eventi
             String uniqueName = "Valutato " + System.currentTimeMillis();
-            Collaborator collab = Collaborator.create(uniqueName, "+39 200");
+            Collaborator collab = Collaborator.create(uniqueName, "+39 200 " + System.currentTimeMillis());
             
             // Nota senza evento specifico (caso generale) - uses 4-arg signature
             PerformanceNote note = PerformanceNote.create(collab, null, null, "Ottimo lavoro, puntuale e professionale");
@@ -241,6 +242,78 @@ public class PersonnelTest {
             assertEquals(collab, note.getCollaborator());
             assertEquals("Ottimo lavoro, puntuale e professionale", note.getNote());
             assertNotNull(note.getCreatedAt(), "Deve avere un timestamp");
+        }
+        
+        @Test
+        @DisplayName("DSD: collab.addPerformanceNote() crea nota internamente")
+        void testAddPerformanceNoteViaDSD() throws PersonnelException {
+            // Test allineato al DSD logPerformance.png
+            // Il Collaborator è "esperto" dei propri dati e crea la nota internamente
+            String uniqueName = "DSD Test " + System.currentTimeMillis();
+            Collaborator collab = Collaborator.create(uniqueName, "+39 201 " + System.currentTimeMillis());
+            
+            // Usa il nuovo metodo addPerformanceNote allineato al DSD
+            PerformanceNote note = collab.addPerformanceNote("Test nota via DSD", null, null);
+            
+            assertNotNull(note, "La nota deve essere creata");
+            assertEquals(collab, note.getCollaborator(), "La nota deve riferirsi al collaboratore");
+            assertEquals("Test nota via DSD", note.getNote());
+        }
+        
+        @Test
+        @DisplayName("Note hanno timestamp automatico")
+        void testPerformanceNoteHasTimestamp() throws PersonnelException {
+            String uniqueName = "Timestamp Test " + System.currentTimeMillis();
+            Collaborator collab = Collaborator.create(uniqueName, "+39 203 " + System.currentTimeMillis());
+            
+            long beforeCreate = System.currentTimeMillis();
+            PerformanceNote note = collab.addPerformanceNote("Test timestamp", null, null);
+            long afterCreate = System.currentTimeMillis();
+            
+            assertNotNull(note.getCreatedAt());
+            assertTrue(note.getCreatedAt().getTime() >= beforeCreate && 
+                       note.getCreatedAt().getTime() <= afterCreate,
+                "Il timestamp deve essere nel range della creazione");
+        }
+    }
+    
+    // ========================================================================
+    // TEST ECCEZIONI E BUSINESS RULES - Basati sui contratti main.tex
+    // ========================================================================
+    
+    @Nested
+    @DisplayName("Eccezioni e Business Rules (Contratti)")
+    class ExceptionsAndBusinessRulesTest {
+        
+        @Test
+        @DisplayName("Eccezione 2a.2a: Contatto duplicato non permesso")
+        void testDuplicateContactThrowsException() throws PersonnelException {
+            // Crea primo collaboratore
+            String contact = "+39 UNIQUE " + System.currentTimeMillis();
+            Collaborator first = Collaborator.create("Primo", contact);
+            first.save();
+            
+            // Tentativo di creare secondo con stesso contatto deve fallire
+            assertThrows(PersonnelException.class, () -> {
+                Collaborator.create("Secondo", contact);
+            }, "Deve lanciare PersonnelException per contatto duplicato");
+        }
+        
+        @Test
+        @DisplayName("Eccezione 2a.2a: Contatto di collaboratore INATTIVO può essere riusato")
+        void testInactiveContactCanBeReused() throws PersonnelException {
+            // Crea e disattiva primo collaboratore
+            String contact = "+39 RIUSO " + System.currentTimeMillis();
+            Collaborator first = Collaborator.create("Primo Riuso", contact);
+            first.save();
+            first.deactivate();
+            first.update();
+            
+            // Ora deve poter creare un altro con lo stesso contatto
+            assertDoesNotThrow(() -> {
+                Collaborator second = Collaborator.create("Secondo Riuso", contact);
+                assertNotNull(second);
+            }, "Contatto di collaboratore inattivo può essere riutilizzato");
         }
     }
     
@@ -256,7 +329,7 @@ public class PersonnelTest {
         @DisplayName("Un collaboratore salvato può essere recuperato")
         void testCollaboratorSaveAndLoad() throws PersonnelException {
             String uniqueName = "Salvataggio Test " + System.currentTimeMillis();
-            Collaborator collab = Collaborator.create(uniqueName, "+39 300");
+            Collaborator collab = Collaborator.create(uniqueName, "+39 300 " + System.currentTimeMillis());
             collab.save();
             
             assertTrue(collab.getId() > 0, 
@@ -272,11 +345,11 @@ public class PersonnelTest {
         void testLoadActiveFiltersInactive() throws PersonnelException {
             // Crea due collaboratori: uno attivo, uno disattivato
             String activeName = "Attivo Test " + System.currentTimeMillis();
-            Collaborator active = Collaborator.create(activeName, "+39 301");
+            Collaborator active = Collaborator.create(activeName, "+39 301 " + System.currentTimeMillis());
             active.save();
             
             String inactiveName = "Inattivo Test " + System.currentTimeMillis();
-            Collaborator inactive = Collaborator.create(inactiveName, "+39 302");
+            Collaborator inactive = Collaborator.create(inactiveName, "+39 302 " + System.currentTimeMillis());
             inactive.save();
             inactive.deactivate(); // Questo ora lancia PersonnelException ma non dovrebbe avere assignment
             inactive.update();
